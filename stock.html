@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบจัดการสต๊อกสินค้า</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --line: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+  }
+  body {
+    font-family: "Segoe UI", "Sarabun", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .stat .label { font-size: 13px; color: var(--muted); }
+  .stat .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  input, button {
+    font: inherit;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    background: var(--card);
+    color: var(--text);
+    outline: none;
+  }
+  input:focus { border-color: var(--accent); }
+  #search { flex: 1; min-width: 180px; }
+  button {
+    cursor: pointer;
+    background: var(--accent);
+    color: #06263a;
+    border: none;
+    font-weight: 600;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: .85; }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); font-weight: 500; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.num, th.num { text-align: right; }
+  tr.low td { background: rgba(245,158,11,.08); }
+
+  .qty-btns { display: inline-flex; gap: 6px; }
+  .icon-btn {
+    width: 30px; height: 30px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 7px; font-size: 16px; font-weight: 700;
+  }
+  .plus { background: var(--green); color: #052e12; }
+  .minus { background: var(--red); color: #3b0a0a; }
+  .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--amber); color: #3a2603; font-weight: 700;
+  }
+  .row-actions button { background: transparent; border: none; color: var(--muted); font-size: 13px; padding: 4px 6px; }
+  .row-actions button:hover { color: var(--text); }
+  .empty { text-align: center; color: var(--muted); padding: 40px; }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px; width: 100%; max-width: 420px;
+  }
+  .modal h2 { font-size: 18px; margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+  .field input { width: 100%; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .table-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
+</style>
+</head>
+<body>
+  <h1>📦 ระบบจัดการสต๊อกสินค้า</h1>
+  <p class="sub">ข้อมูลบันทึกในเครื่องนี้อัตโนมัติ (localStorage)</p>
+
+  <div class="summary">
+    <div class="stat"><div class="label">รายการสินค้า</div><div class="value" id="stat-items">0</div></div>
+    <div class="stat"><div class="label">จำนวนรวม (ชิ้น)</div><div class="value" id="stat-qty">0</div></div>
+    <div class="stat"><div class="label">มูลค่าสต๊อกรวม</div><div class="value" id="stat-value">฿0</div></div>
+    <div class="stat"><div class="label">ใกล้หมด</div><div class="value" id="stat-low" style="color:var(--amber)">0</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input id="search" placeholder="🔍 ค้นหาชื่อสินค้า หรือ SKU...">
+    <button onclick="openModal()">+ เพิ่มสินค้า</button>
+    <button class="ghost" onclick="exportData()">ส่งออก CSV</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>สินค้า</th>
+          <th>SKU</th>
+          <th class="num">คงเหลือ</th>
+          <th class="num">จุดสั่งซื้อ</th>
+          <th class="num">ราคา/ชิ้น</th>
+          <th class="num">มูลค่า</th>
+          <th>ปรับสต๊อก</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">ยังไม่มีสินค้า — กด "เพิ่มสินค้า" เพื่อเริ่มต้น</div>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2 id="modal-title">เพิ่มสินค้า</h2>
+      <input type="hidden" id="f-id">
+      <div class="field"><label>ชื่อสินค้า *</label><input id="f-name" placeholder="เช่น เสื้อโปโล สีขาว"></div>
+      <div class="field"><label>SKU / รหัส</label><input id="f-sku" placeholder="เช่น POLO-WH-M"></div>
+      <div class="field"><label>จำนวนคงเหลือ</label><input id="f-qty" type="number" min="0" value="0"></div>
+      <div class="field"><label>จุดสั่งซื้อ (แจ้งเตือนเมื่อต่ำกว่านี้)</label><input id="f-reorder" type="number" min="0" value="5"></div>
+      <div class="field"><label>ราคาต่อชิ้น (บาท)</label><input id="f-price" type="number" min="0" step="0.01" value="0"></div>
+      <div class="modal-actions">
+        <button class="ghost" onclick="closeModal()">ยกเลิก</button>
+        <button onclick="saveItem()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const KEY = "stock_items_v1";
+let items = load();
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch { return []; }
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(items)); render(); }
+function uid() { return Date.now().toString(36) + Math.floor(Math.random()*1e5).toString(36); }
+function fmt(n) { return "฿" + Number(n).toLocaleString("th-TH", {minimumFractionDigits: 0, maximumFractionDigits: 2}); }
+
+function render() {
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const list = items.filter(it =>
+    it.name.toLowerCase().includes(q) || (it.sku||"").toLowerCase().includes(q)
+  );
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+  document.getElementById("empty").style.display = list.length ? "none" : "block";
+
+  list.forEach(it => {
+    const low = it.qty <= it.reorder;
+    const tr = document.createElement("tr");
+    if (low) tr.className = "low";
+    tr.innerHTML = `
+      <td>${esc(it.name)} ${low ? '<span class="badge">ใกล้หมด</span>' : ''}</td>
+      <td>${esc(it.sku||"-")}</td>
+      <td class="num">${it.qty}</td>
+      <td class="num">${it.reorder}</td>
+      <td class="num">${fmt(it.price)}</td>
+      <td class="num">${fmt(it.qty * it.price)}</td>
+      <td>
+        <span class="qty-btns">
+          <button class="icon-btn plus" title="รับเข้า" onclick="adjust('${it.id}',1)">+</button>
+          <button class="icon-btn minus" title="เบิกออก" onclick="adjust('${it.id}',-1)">−</button>
+        </span>
+      </td>
+      <td class="row-actions">
+        <button onclick="openModal('${it.id}')">แก้ไข</button>
+        <button onclick="removeItem('${it.id}')">ลบ</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("stat-items").textContent = items.length;
+  document.getElementById("stat-qty").textContent = items.reduce((s,i)=>s+i.qty,0).toLocaleString("th-TH");
+  document.getElementById("stat-value").textContent = fmt(items.reduce((s,i)=>s+i.qty*i.price,0));
+  document.getElementById("stat-low").textContent = items.filter(i=>i.qty<=i.reorder).length;
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function adjust(id, delta) {
+  const it = items.find(i=>i.id===id);
+  if (!it) return;
+  it.qty = Math.max(0, it.qty + delta);
+  save();
+}
+
+function openModal(id) {
+  const isEdit = !!id;
+  document.getElementById("modal-title").textContent = isEdit ? "แก้ไขสินค้า" : "เพิ่มสินค้า";
+  const it = isEdit ? items.find(i=>i.id===id) : {id:"",name:"",sku:"",qty:0,reorder:5,price:0};
+  document.getElementById("f-id").value = it.id;
+  document.getElementById("f-name").value = it.name;
+  document.getElementById("f-sku").value = it.sku || "";
+  document.getElementById("f-qty").value = it.qty;
+  document.getElementById("f-reorder").value = it.reorder;
+  document.getElementById("f-price").value = it.price;
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("f-name").focus();
+}
+function closeModal(){ document.getElementById("overlay").classList.remove("open"); }
+
+function saveItem() {
+  const name = document.getElementById("f-name").value.trim();
+  if (!name) { alert("กรุณากรอกชื่อสินค้า"); return; }
+  const data = {
+    name,
+    sku: document.getElementById("f-sku").value.trim(),
+    qty: Math.max(0, parseInt(document.getElementById("f-qty").value)||0),
+    reorder: Math.max(0, parseInt(document.getElementById("f-reorder").value)||0),
+    price: Math.max(0, parseFloat(document.getElementById("f-price").value)||0),
+  };
+  const id = document.getElementById("f-id").value;
+  if (id) {
+    Object.assign(items.find(i=>i.id===id), data);
+  } else {
+    items.push({ id: uid(), ...data });
+  }
+  closeModal();
+  save();
+}
+
+function removeItem(id) {
+  const it = items.find(i=>i.id===id);
+  if (confirm(`ลบ "${it.name}" ?`)) {
+    items = items.filter(i=>i.id!==id);
+    save();
+  }
+}
+
+function exportData() {
+  if (!items.length) { alert("ยังไม่มีข้อมูล"); return; }
+  const rows = [["ชื่อสินค้า","SKU","คงเหลือ","จุดสั่งซื้อ","ราคา/ชิ้น","มูลค่า"]];
+  items.forEach(i=>rows.push([i.name,i.sku||"",i.qty,i.reorder,i.price,i.qty*i.price]));
+  const csv = "﻿" + rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "stock.csv";
+  a.click();
+}
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("overlay").addEventListener("click", e=>{ if(e.target.id==="overlay") closeModal(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+
+render();
+</script>
+</body>
+</html>

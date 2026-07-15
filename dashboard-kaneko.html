@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แดชบอร์ดสั่งสต๊อก Kaneko 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    /* dark modern design tokens */
+    --bg: #08090f;
+    --glass: rgba(255,255,255,.045);
+    --glass-2: rgba(255,255,255,.07);
+    --line: rgba(255,255,255,.09);
+    --line-strong: rgba(255,255,255,.16);
+    --text: #eef1f7;
+    --muted: #8791a6;
+    --dim: #5c6579;
+    --c1: #22d3ee;   /* cyan */
+    --c2: #818cf8;   /* indigo */
+    --amber: #fbbf24;
+    --green: #34d399;
+    --red: #fb7185;
+    --gA: #60a5fa; --gB: #2dd4bf; --gC: #c084fc; --gF: #94a3b8;
+    --grad: linear-gradient(90deg, var(--c1), var(--c2));
+    --shadow: 0 10px 40px -12px rgba(0,0,0,.7);
+  }
+  body {
+    font-family: "Segoe UI", "Sarabun", system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(900px 500px at 12% -8%, rgba(34,211,238,.14), transparent 60%),
+      radial-gradient(800px 520px at 92% 4%, rgba(129,140,248,.16), transparent 58%),
+      var(--bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: 34px 22px 70px; max-width: 1120px; margin: 0 auto; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--c1); }
+
+  header { margin-bottom: 8px; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+    background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  h1 { font-size: 29px; font-weight: 800; letter-spacing: -.6px; margin-top: 6px; line-height: 1.15; }
+  h1 .g { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { color: var(--muted); font-size: 13.5px; margin-top: 8px; max-width: 760px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px,1fr)); gap: 15px; margin: 26px 0; }
+  .card {
+    position: relative; background: var(--glass); border: 1px solid var(--line);
+    border-radius: 18px; padding: 20px; backdrop-filter: blur(14px); overflow: hidden;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .card::before { content:""; position:absolute; inset:0 auto auto 0; height:3px; width:100%; background: var(--grad); opacity:.0; transition:opacity .18s; }
+  .card:hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: var(--shadow); }
+  .card:hover::before { opacity:.9; }
+  .card .k { font-size: 12.5px; color: var(--muted); }
+  .card .v { font-size: 32px; font-weight: 800; margin-top: 8px; letter-spacing: -1px; line-height: 1; }
+  .card .v small { font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+  .card.accent .v { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .card.amber .v { color: var(--amber); }
+
+  .grades { display: flex; gap: 15px; margin-top: 14px; flex-wrap: wrap; }
+  .grade-chip { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
+  .dot { width: 10px; height: 10px; border-radius: 3px; box-shadow: 0 0 10px currentColor; }
+
+  .section-title { font-size: 15.5px; font-weight: 700; margin: 32px 0 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pill { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--glass-2); color: var(--muted); border: 1px solid var(--line); }
+  .pill.grad { background: linear-gradient(90deg, rgba(34,211,238,.18), rgba(129,140,248,.18)); color: #cbe9ff; border-color: rgba(129,140,248,.35); }
+
+  .panel { background: var(--glass); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; backdrop-filter: blur(14px); box-shadow: var(--shadow); }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 620px; }
+  th, td { padding: 13px 15px; text-align: left; font-size: 13.5px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: .3px; background: rgba(255,255,255,.03); position: sticky; top: 0; backdrop-filter: blur(6px); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.rank { color: var(--dim); font-variant-numeric: tabular-nums; width: 40px; font-size: 12.5px; }
+  td.sku { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12.5px; font-weight: 600; white-space: nowrap; color: #cdd5e6; }
+  .badge { font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 7px; color: #06080e; }
+  .b-A { background: var(--gA); } .b-B { background: var(--gB); } .b-C { background: var(--gC); } .b-F { background: var(--gF); }
+  td.qty { text-align: right; }
+  .qnum { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .qnum.mut { color: var(--amber); }
+  .qnum.out { color: var(--c1); }
+  .bar-cell { width: 30%; }
+  .bar-track { background: rgba(255,255,255,.06); border-radius: 8px; height: 10px; width: 100%; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--grad); border-radius: 8px; box-shadow: 0 0 12px rgba(34,211,238,.4); }
+
+  tbody tr.main { cursor: pointer; transition: background .14s; }
+  tbody tr.main:hover { background: var(--glass-2); }
+  tr.main td.rank::before { content: "▸"; color: var(--dim); font-size: 11px; margin-right: 5px; display: inline-block; transition: transform .18s; }
+  tr.main.open td.rank::before { transform: rotate(90deg); color: var(--c1); }
+  tr.main.open { background: var(--glass-2); }
+  tr.detail { display: none; }
+  tr.detail.show { display: table-row; }
+  tr.detail > td { background: rgba(0,0,0,.25); padding: 16px 18px 18px 52px; border-bottom: 1px solid var(--line); }
+  .sizes { display: flex; flex-wrap: wrap; gap: 9px; }
+  .size-chip { min-width: 66px; border-radius: 11px; padding: 8px 6px 7px; text-align: center; border: 1px solid var(--line); background: var(--glass); }
+  .size-chip .sl { font-size: 10.5px; color: var(--muted); letter-spacing: .3px; }
+  .size-chip .sv { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 3px; }
+  .size-chip.pos { background: rgba(52,211,153,.13); border-color: rgba(52,211,153,.4); }
+  .size-chip.pos .sv { color: var(--green); }
+  .size-chip.zero { opacity: .42; }
+  .size-chip.zero .sv { color: var(--muted); }
+  .detail-note { font-size: 12px; color: var(--muted); margin-top: 12px; }
+  .detail-note b { color: var(--green); }
+
+  details { margin-top: 28px; }
+  summary { cursor: pointer; font-size: 15px; font-weight: 700; padding: 14px 18px; background: var(--glass); border: 1px solid var(--line); border-radius: 16px; list-style: none; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(14px); transition: border-color .18s; }
+  summary:hover { border-color: var(--line-strong); }
+  summary::-webkit-details-marker { display: none; }
+  details[open] summary { border-radius: 16px 16px 0 0; }
+  .neg-panel { border: 1px solid var(--line); border-top: none; border-radius: 0 0 16px 16px; overflow: hidden; }
+  td.neg { text-align: right; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+  footer { margin-top: 34px; color: var(--dim); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 18px; }
+  footer code { background: var(--glass-2); padding: 1px 7px; border-radius: 6px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Stock Order Dashboard · 2026</div>
+    <h1>📦 สั่งสต๊อก <span class="g">Kaneko / KM</span></h1>
+    <p class="sub">อ้างอิงหน้า “สั่งสต๊อก Kaneko” ไฟล์ Rev.00 สั่งสต๊อก Product 2026 · คอลัมน์ “จำนวนที่ต้องการสั่งเพิ่ม” · ข้อมูล ณ 14 ก.ค. 2026</p>
+  </header>
+
+  <div class="cards">
+    <div class="card accent">
+      <div class="k">SKU ที่ต้องสั่งเพิ่ม</div>
+      <div class="v">21 <small>/ 30 รายการ</small></div>
+    </div>
+    <div class="card">
+      <div class="k">ยอดขายออก 6 เดือน (21 SKU)</div>
+      <div class="v" style="color:var(--c1)">14,261 <small>ตัว</small></div>
+    </div>
+    <div class="card">
+      <div class="k">จำนวนรวมที่ต้องสั่ง (สุทธิ)</div>
+      <div class="v">10,055 <small>ตัว</small></div>
+    </div>
+    <div class="card amber">
+      <div class="k">รวม Order Qty (ผลิตเต็มล็อต)</div>
+      <div class="v">20,500 <small>ตัว</small></div>
+    </div>
+    <div class="card">
+      <div class="k">แบ่งตามเกรด (ที่ต้องสั่ง)</div>
+      <div class="grades">
+        <span class="grade-chip" style="color:var(--gA)"><span class="dot"></span><span style="color:var(--muted)">A · 3</span></span>
+        <span class="grade-chip" style="color:var(--gB)"><span class="dot"></span><span style="color:var(--muted)">B · 8</span></span>
+        <span class="grade-chip" style="color:var(--gC)"><span class="dot"></span><span style="color:var(--muted)">C · 10</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">🔴 รายการที่ต้องสั่งเพิ่ม <span class="pill">เรียงจากมากไปน้อย</span> <span class="pill grad">▸ คลิกแถวเพื่อดูรายไซส์</span></div>
+  <div class="panel"><div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>SKU</th><th>สินค้า</th><th>เกรด</th>
+          <th style="text-align:right">ยอด Output (ขายออก)</th>
+          <th style="text-align:right">จำนวนที่ต้องสั่ง (ตัว)</th>
+          <th style="text-align:right">Order Qty (ล็อต)</th>
+          <th class="bar-cell">สัดส่วน</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div></div>
+
+  <details>
+    <summary>🟢 รายการที่สต๊อกยังพอ / เกิน — ไม่ต้องสั่ง <span class="pill">9 รายการ</span></summary>
+    <div class="neg-panel"><div class="scroll">
+      <table>
+        <thead>
+          <tr><th>SKU</th><th>สินค้า</th><th>เกรด</th><th style="text-align:right">ยอด Output (ขายออก)</th><th style="text-align:right">ส่วนต่าง (ตัว)</th></tr>
+        </thead>
+        <tbody id="negrows"></tbody>
+      </table>
+    </div></div>
+  </details>
+
+  <footer>
+    ที่มา: หน้า <code>สั่งสต๊อก Kaneko</code> (คอลัมน์ K “จำนวนที่ต้องการสั่งเพิ่ม” ระดับสรุปของแต่ละ SKU) ·
+    ค่าติดลบ = สต๊อก + WIP มากกว่าจุดที่ต้องเติม จึงยังไม่ต้องสั่ง ·
+    Order Qty = ล็อตผลิตมาตรฐานต่อรอบ · ตัวเลขรายไซส์ตรวจยอดรวมตรงกับสรุปทุก SKU แล้ว
+  </footer>
+
+<script>
+const L9 = ["S ญ","M ญ","L ญ","M ช","L ช","XL ช","XXL ช","3XL ช","5XL ช"];
+const L7 = ["S ญ","M ญ","L ญ","M ช","L ช","XL ช","XXL ช"];
+// [sku, ชื่อ, เกรด, ยอดสุทธิ, ค่ารายไซส์, Order Qty, ยอด Output (ขายออก ม.ค.-มิ.ย.69)]
+const order = [
+  ["U01KM0005","เสื้อโปโล KM สีเทา","A",1687,[195,156,88,298,252,354,195,68,80],1500,2100],
+  ["01PK093","Kaneko TK สีกรมท่าเข้ม","A",1275,[125,124,94,176,329,277,107,18,25],900,1891],
+  ["01PK058","Kaneko TK สีดำ ขลิบสีแดง","B",870,[35,78,6,156,314,190,90],900,703],
+  ["01PC107","Kaneko TC สีเทาท็อป ขลิบสีน้ำเงิน","B",843,[111,162,-49,81,370,92,75],900,488],
+  ["U01KM0002","เสื้อโปโล KM สีเขียว","B",766,[29,59,42,160,182,200,59,10,23],1200,1307],
+  ["U01KM0007","เสื้อโปโล KM สีฟ้า","B",623,[25,48,25,103,147,136,112,17,10],1000,673],
+  ["U01KM0009","เสื้อโปโลสำเร็จรูป KM สีเทา","C",569,[87,59,58,31,100,120,49,26,39],1000,580],
+  ["01PK115","Kaneko TK สีฟ้า Summer","C",474,[-100,103,93,-107,268,176,41],900,402],
+  ["01PK094","Kaneko TK สีเทาท็อปดราย ขลิบสีดำ","B",420,[-8,-5,25,62,210,135,1],900,193],
+  ["01PC108","Kaneko TC สีเทาท็อป ขลิบสีแดง","C",357,[0,-27,-1,25,181,166,13],900,19],
+  ["01PK066","Kaneko TK สีกรมท่าเข้ม ขลิบสีขาว","A",351,[26,32,19,45,77,76,45,14,17],1200,1506],
+  ["01KM120","เสื้อโปโล KM สีขาว","B",273,[65,53,5,22,22,60,48,-6,5],900,383],
+  ["01PK103","Kaneko TK สีแดง ขลิบสีกรมท่า","C",267,[-57,2,29,-12,118,121,67],900,281],
+  ["01PK027","Kaneko TK สีเขียวมิ้นท์ ขลิบสีครีม","C",249,[53,53,81,-75,25,58,53],900,38],
+  ["01PK085","Kaneko TK สีกรมท่า ขลิบสีฟ้า","B",221,[16,-33,-38,-25,88,91,55,27,37],900,572],
+  ["U01KM0003","เสื้อโปโล KM สีแดง","C",200,[47,19,-28,1,69,49,22,16,5],1000,692],
+  ["01PK117","Kaneko TK สีเหลือง Summer","C",177,[-21,-21,-19,-27,128,92,46],900,554],
+  ["01PC059","Kaneko TC สีขาวล้วน","B",175,[78,22,12,-14,-8,45,33,1,5],900,472],
+  ["01PK098","Kaneko TK สีเลือดนก","C",116,[-31,-2,71,-38,67,120,-71],900,479],
+  ["U01KM0001","เสื้อโปโล KM สีดำ","C",115,[107,15,-118,-289,336,23,21,1,20],1000,634],
+  ["01PK116","Kaneko TK สีแดง Summer","C",27,[0,3,6,1,2,7,8],900,294],
+];
+// [sku, ชื่อ, เกรด, ส่วนต่าง, ยอด Output]
+const skip = [
+  ["01PK113","Kaneko TK สีม่วงเข้ม","C",-8,425],
+  ["U01KM0008","เสื้อโปโลสำเร็จรูป KM สีเขียวหยก","C",-66,464],
+  ["01PK118","Kaneko TK สีส้ม Summer","C",-80,175],
+  ["01PK060","Kaneko TK สีดำล้วน","B",-129,1244],
+  ["U01TCPZ38","เสื้อโปโล ผ้า TCP สีกรมเนวี่","C",-372,578],
+  ["U01KM0004","เสื้อโปโล KM สีกรมท่า","A",-379,2486],
+  ["U01TCPZ31","เสื้อโปโล ผ้า TCP สีเทาท็อปดราย","C",-427,875],
+  ["U01TCPZ32","เสื้อโปโล ผ้า TCP สีดำ","C",-670,487],
+  ["U01KM0010","เสื้อโปโลสำเร็จรูป KM สีดำล้วน","F",-1156,857],
+];
+const fmt = n => Number(n).toLocaleString("th-TH");
+const max = Math.max(...order.map(r => r[3]));
+
+document.getElementById("rows").innerHTML = order.map((r,i) => {
+  const vals = r[4], labels = vals.length === 9 ? L9 : L7;
+  const posSum = vals.filter(v => v > 0).reduce((a,b) => a+b, 0);
+  const chips = vals.map((v,j) => {
+    const cls = v > 0 ? "pos" : "zero";
+    return `<div class="size-chip ${cls}"><div class="sl">${labels[j]}</div><div class="sv">${v>0?"+":""}${fmt(v)}</div></div>`;
+  }).join("");
+  return `
+  <tr class="main" data-i="${i}">
+    <td class="rank">${i+1}</td>
+    <td class="sku">${r[0]}</td>
+    <td>${r[1]}</td>
+    <td><span class="badge b-${r[2]}">${r[2]}</span></td>
+    <td class="qty"><span class="qnum out">${fmt(r[6])}</span></td>
+    <td class="qty"><span class="qnum">${fmt(r[3])}</span></td>
+    <td class="qty"><span class="qnum mut">${fmt(r[5])}</span></td>
+    <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${(r[3]/max*100).toFixed(1)}%"></div></div></td>
+  </tr>
+  <tr class="detail" data-d="${i}">
+    <td colspan="8">
+      <div class="sizes">${chips}</div>
+      <div class="detail-note">🟢 ไซส์สีเขียว = ต้องสั่งเพิ่ม · ไซส์สีจาง = สต๊อกพอ/เกิน (ไม่ต้องสั่ง) · <b>รวมเฉพาะไซส์ที่ขาด = ${fmt(posSum)} ตัว</b> · ยอดสุทธิทั้ง SKU = ${fmt(r[3])} ตัว</div>
+    </td>
+  </tr>`;
+}).join("");
+
+document.getElementById("negrows").innerHTML = skip.map(r => `
+  <tr>
+    <td class="sku">${r[0]}</td>
+    <td>${r[1]}</td>
+    <td><span class="badge b-${r[2]}">${r[2]}</span></td>
+    <td class="qty"><span class="qnum out">${fmt(r[4])}</span></td>
+    <td class="neg">${fmt(r[3])}</td>
+  </tr>`).join("");
+
+document.getElementById("rows").addEventListener("click", e => {
+  const tr = e.target.closest("tr.main");
+  if (!tr) return;
+  const i = tr.dataset.i;
+  const detail = document.querySelector(`tr.detail[data-d="${i}"]`);
+  tr.classList.toggle("open");
+  detail.classList.toggle("show");
+});
+</script>
+</body>
+</html>
