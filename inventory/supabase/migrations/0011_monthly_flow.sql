@@ -9,8 +9,9 @@ create table if not exists public.monthly_flow (
   category     text not null,             -- ประเภทสินค้า (หมวด)
   month        text not null,             -- Jan..Dec
   month_idx    integer not null,          -- 0..11
-  input_value  numeric(16,2) not null default 0,
-  output_value numeric(16,2) not null default 0,
+  input_value     numeric(16,2) not null default 0,
+  output_value    numeric(16,2) not null default 0,
+  inventory_value numeric(16,2) not null default 0,   -- มูลค่าคงคลังปลายเดือน (col2)
   source       text not null default '_DATA Inventory Month 2026',
   synced_at    timestamptz not null default now()
 );

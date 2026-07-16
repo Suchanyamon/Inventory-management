@@ -15,7 +15,7 @@ export default async function Dashboard() {
     supabase.from("v_reorder_list").select("sku,name,on_hand,box_pack_size,stock_status,suggested_order_qty,suggested_boxes").limit(8),
     supabase.from("v_reorder_list").select("*", { count: "exact", head: true }),
     supabase.from("v_near_expiry").select("sku,name,warehouse_code,lot_no,expiry_date,days_left,qty").lte("days_left", NEAR_EXPIRY_DAYS).gte("days_left", 0).limit(6),
-    supabase.from("monthly_flow").select("business,category,month,month_idx,input_value,output_value").limit(2000),
+    supabase.from("monthly_flow").select("business,category,month,month_idx,input_value,output_value,inventory_value").limit(2000),
   ]);
 
   const totalValue = (valByWh || []).reduce((s, w) => s + Number(w.total_value_fifo || 0), 0);
