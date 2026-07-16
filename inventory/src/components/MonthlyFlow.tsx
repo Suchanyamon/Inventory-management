@@ -8,7 +8,7 @@ export interface FlowRow {
   month: string;
   month_idx: number;
   input_value: number;
-  output_value: number;
+  output_value: number; // มูลค่า Output = ค่าลบ
   inventory_value: number;
 }
 
@@ -16,13 +16,14 @@ const BIZ_ORDER = ["Uniform", "Merchandise", "Fashion", "Other"];
 const IN = "var(--brand)";
 const OUT = "#f97316";
 const INV = "#6366f1";
-const GUTTER = 46; // px — ความกว้างแกน Y (เท่ากันทั้ง 2 กราฟ เพื่อให้เดือนตรงแนว)
-const PLOT_H = 150; // px — ความสูงพื้นที่กราฟ
+const GUTTER = 52;
+const PLOT_H = 150;
 
 function compact(n: number): string {
+  const s = n < 0 ? "-" : "";
   const a = Math.abs(n);
-  if (a >= 1e6) return (n / 1e6).toFixed(a >= 1e7 ? 0 : 1) + "M";
-  if (a >= 1e3) return Math.round(n / 1e3) + "K";
+  if (a >= 1e6) return s + (a / 1e6).toFixed(a >= 1e7 ? 0 : 1) + "M";
+  if (a >= 1e3) return s + Math.round(a / 1e3) + "K";
   return String(Math.round(n));
 }
 
@@ -56,21 +57,26 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
     });
     return Object.entries(m).map(([category, v]) => ({ category, ...v }))
       .filter((c) => c.input || c.output || c.inv)
-      .sort((a, b) => b.input + b.output - (a.input + a.output));
+      .sort((a, b) => (b.input - b.output) - (a.input - a.output));
   }, [sel]);
 
   const totalIn = sel.reduce((s, r) => s + +r.input_value, 0);
-  const totalOut = sel.reduce((s, r) => s + +r.output_value, 0);
-  const flowMax = Math.max(1, ...months.map((mo) => Math.max(byMonth[mo].input, byMonth[mo].output)));
-  // แกนกราฟเส้น (คงคลัง): zoom เข้าช่วง min–max เพื่อให้เห็น trend ชัด
+  const totalOut = sel.reduce((s, r) => s + +r.output_value, 0); // ลบ
+
+  // ---- แกนกราฟเส้น (คงคลัง) : zoom min–max ----
   const invVals = months.map((mo) => byMonth[mo].inv);
   const invMax = Math.max(1, ...invVals);
   const invMin = Math.min(...invVals, invMax);
   const invPad = (invMax - invMin) * 0.35 || invMax * 0.05;
-  const invLo = Math.max(0, invMin - invPad);
-  const invHi = invMax + invPad;
+  const invLo = Math.max(0, invMin - invPad), invHi = invMax + invPad;
   const yInv = (v: number) => 100 - ((v - invLo) / (invHi - invLo || 1)) * 100;
-  const ticks = [1, 0.66, 0.33, 0]; // สัดส่วนแกน Y (กราฟแท่ง)
+  const ticks = [1, 0.66, 0.33, 0];
+
+  // ---- แกนกราฟแท่ง diverging (Input บวกขึ้น / Output ลบลง) ----
+  const inMax = Math.max(1, ...months.map((mo) => byMonth[mo].input));
+  const outMin = Math.min(0, ...months.map((mo) => byMonth[mo].output)); // ค่าลบสุด
+  const range = inMax - outMin || 1;
+  const zeroY = (inMax / range) * PLOT_H; // px จากบนถึงเส้นศูนย์
 
   const empty = months.length === 0;
 
@@ -97,11 +103,8 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
             <div className="relative flex-1" style={{ height: PLOT_H }}>
               <Grid ticks={ticks} />
               <svg viewBox={`0 0 ${months.length} 100`} preserveAspectRatio="none" width="100%" height={PLOT_H} className="absolute inset-0 overflow-visible">
-                <polyline
-                  points={months.map((mo, i) => `${i + 0.5},${yInv(byMonth[mo].inv)}`).join(" ")}
-                  fill="none" stroke={INV} strokeWidth={2} vectorEffect="non-scaling-stroke"
-                  strokeLinejoin="round" strokeLinecap="round"
-                />
+                <polyline points={months.map((mo, i) => `${i + 0.5},${yInv(byMonth[mo].inv)}`).join(" ")}
+                  fill="none" stroke={INV} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
               </svg>
               {months.map((mo, i) => (
                 <div key={mo} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${((i + 0.5) / months.length) * 100}%`, top: `${yInv(byMonth[mo].inv)}%` }}>
@@ -113,23 +116,31 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
           </div>
           <MonthAxis months={months} />
 
-          {/* ===== กราฟล่าง: Input vs Output (แท่ง) ===== */}
+          {/* ===== กราฟล่าง: Input (บวก) vs Output (ลบ) แบบ diverging ===== */}
           <div className="mb-1 mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <span className="flex items-center gap-1.5"><Dot color={IN} /> Input <b className="text-brand">{baht(totalIn)}</b></span>
             <span className="flex items-center gap-1.5"><Dot color={OUT} /> Output <b style={{ color: OUT }}>{baht(totalOut)}</b></span>
-            <span className="text-slate-500">สุทธิ <b className={totalIn - totalOut >= 0 ? "text-emerald-600" : "text-red-600"}>{baht(totalIn - totalOut)}</b></span>
+            <span className="text-slate-500">สุทธิ <b className={totalIn + totalOut >= 0 ? "text-emerald-600" : "text-red-600"}>{baht(totalIn + totalOut)}</b></span>
           </div>
           <div className="flex gap-2">
-            <YAxis max={flowMax} />
+            {/* y-axis diverging */}
+            <div className="relative text-right text-[10px] text-slate-400" style={{ height: PLOT_H, width: GUTTER }}>
+              <span className="absolute right-0 top-0 -translate-y-1/2">{compact(inMax)}</span>
+              <span className="absolute right-0 -translate-y-1/2 font-medium text-slate-500" style={{ top: zeroY }}>0</span>
+              <span className="absolute bottom-0 right-0 translate-y-1/2" style={{ color: OUT }}>{compact(outMin)}</span>
+            </div>
             <div className="relative flex-1" style={{ height: PLOT_H }}>
-              <Grid ticks={ticks} />
-              <div className="absolute inset-0 flex items-end">
+              {/* zero line */}
+              <div className="absolute w-full border-t border-slate-300" style={{ top: zeroY }} />
+              <div className="absolute inset-0 flex">
                 {months.map((mo) => {
                   const d = byMonth[mo];
+                  const inH = (d.input / range) * PLOT_H;
+                  const outH = (-d.output / range) * PLOT_H;
                   return (
-                    <div key={mo} className="flex flex-1 items-end justify-center gap-[3px]">
-                      <BarPx px={(d.input / flowMax) * PLOT_H} color={IN} label={compact(d.input)} title={`${mo} Input ${baht(d.input)}`} />
-                      <BarPx px={(d.output / flowMax) * PLOT_H} color={OUT} label={compact(d.output)} title={`${mo} Output ${baht(d.output)}`} />
+                    <div key={mo} className="relative flex-1">
+                      <div className="group absolute rounded-t" style={{ left: "14%", width: "32%", bottom: PLOT_H - zeroY, height: Math.max(inH, d.input > 0 ? 2 : 0), background: IN }} title={`${mo} Input ${baht(d.input)}`} />
+                      <div className="group absolute rounded-b" style={{ left: "54%", width: "32%", top: zeroY, height: Math.max(outH, d.output < 0 ? 2 : 0), background: OUT }} title={`${mo} Output ${baht(d.output)}`} />
                     </div>
                   );
                 })}
@@ -157,7 +168,7 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
                     <td className="td text-right text-brand">{baht(c.input)}</td>
                     <td className="td text-right" style={{ color: OUT }}>{baht(c.output)}</td>
                     <td className="td text-right" style={{ color: INV }}>{baht(c.inv)}</td>
-                    <td className={"td text-right " + (c.input - c.output >= 0 ? "text-emerald-600" : "text-red-600")}>{baht(c.input - c.output)}</td>
+                    <td className={"td text-right " + (c.input + c.output >= 0 ? "text-emerald-600" : "text-red-600")}>{baht(c.input + c.output)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -181,9 +192,7 @@ function YAxis({ min = 0, max }: { min?: number; max: number }) {
 function Grid({ ticks }: { ticks: number[] }) {
   return (
     <div className="pointer-events-none absolute inset-0">
-      {ticks.map((t, i) => (
-        <div key={i} className="absolute w-full border-t border-slate-100" style={{ top: `${(1 - t) * 100}%` }} />
-      ))}
+      {ticks.map((t, i) => <div key={i} className="absolute w-full border-t border-slate-100" style={{ top: `${(1 - t) * 100}%` }} />)}
     </div>
   );
 }
@@ -195,15 +204,6 @@ function MonthAxis({ months }: { months: string[] }) {
       <div className="flex flex-1">
         {months.map((mo) => <div key={mo} className="flex-1 text-center text-xs text-slate-500">{mo}</div>)}
       </div>
-    </div>
-  );
-}
-
-function BarPx({ px, color, label, title }: { px: number; color: string; label: string; title: string }) {
-  return (
-    <div className="group relative flex w-1/2 flex-col items-center justify-end" style={{ height: PLOT_H }} title={title}>
-      <span className="mb-0.5 text-[9px] font-medium text-slate-500 opacity-0 transition group-hover:opacity-100">{label}</span>
-      <div className="w-full rounded-t" style={{ height: Math.max(px, px > 0 ? 2 : 0), background: color }} />
     </div>
   );
 }

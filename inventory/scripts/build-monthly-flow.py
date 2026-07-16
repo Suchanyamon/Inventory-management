@@ -22,11 +22,11 @@ with wb.get_sheet(SHEET) as sh:
         mon = (v[9] or "").strip() if isinstance(v[9], str) else v[9]
         if not biz or not mon: continue
         inp = v[11] if isinstance(v[11], (int, float)) else 0
-        out = v[12] if isinstance(v[12], (int, float)) else 0
+        out = v[12] if isinstance(v[12], (int, float)) else 0   # มูลค่า Output (ค่าลบตามต้นฉบับ)
         inv = v[2] if isinstance(v[2], (int, float)) else 0
         k = (biz, cat, mon)
         agg[k]["input"] += inp
-        agg[k]["output"] += abs(out)
+        agg[k]["output"] += out   # เก็บเครื่องหมายลบไว้
         agg[k]["inv"] += inv
 
 rows = [{"business": b, "category": c, "month": m,
