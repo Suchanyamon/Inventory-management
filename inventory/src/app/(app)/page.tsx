@@ -1,5 +1,6 @@
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { baht, num, STATUS_LABEL } from "@/lib/format";
+import MonthlyFlow, { type FlowRow } from "@/components/MonthlyFlow";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -9,11 +10,12 @@ const NEAR_EXPIRY_DAYS = Number(process.env.NEAR_EXPIRY_DAYS || 90);
 export default async function Dashboard() {
   const supabase = createSupabaseServer();
 
-  const [{ data: valByWh }, { data: reorder }, { count: reorderCount }, { data: nearExp }] = await Promise.all([
+  const [{ data: valByWh }, { data: reorder }, { count: reorderCount }, { data: nearExp }, { data: flow }] = await Promise.all([
     supabase.from("v_valuation_by_warehouse").select("*"),
     supabase.from("v_reorder_list").select("sku,name,on_hand,box_pack_size,stock_status,suggested_order_qty,suggested_boxes").limit(8),
     supabase.from("v_reorder_list").select("*", { count: "exact", head: true }),
     supabase.from("v_near_expiry").select("sku,name,warehouse_code,lot_no,expiry_date,days_left,qty").lte("days_left", NEAR_EXPIRY_DAYS).gte("days_left", 0).limit(6),
+    supabase.from("monthly_flow").select("business,category,month,month_idx,input_value,output_value").limit(2000),
   ]);
 
   const totalValue = (valByWh || []).reduce((s, w) => s + Number(w.total_value_fifo || 0), 0);
@@ -48,6 +50,9 @@ export default async function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* monthly input vs output */}
+      <MonthlyFlow rows={(flow as FlowRow[]) || []} />
 
       {/* reorder preview */}
       <div className="card">

@@ -20,7 +20,7 @@ export default async function ProductDetail({ params }: { params: { sku: string 
 
   const { data: p } = await supabase
     .from("product")
-    .select("id, sku, name, category, color, size, model, unit, box_pack_size, cost_current, reorder_point, par_level, has_lot, barcode")
+    .select("id, sku, name, category, color, size, model, unit, box_pack_size, cost_current, reorder_point, par_level, has_lot, barcode, storage_location")
     .eq("sku", sku)
     .maybeSingle();
   if (!p) notFound();
@@ -53,6 +53,11 @@ export default async function ProductDetail({ params }: { params: { sku: string 
           {p.category && <span>หมวด: {p.category}</span>}
           {p.barcode && <span>บาร์โค้ด: {p.barcode}</span>}
         </div>
+        {p.storage_location && (
+          <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-brand">
+            📍 ตำแหน่งเก็บ (PWC19): <span className="font-semibold">{p.storage_location}</span>
+          </div>
+        )}
         <div className="mt-4 flex flex-wrap gap-2">
           <Link href={`/operations?sku=${encodeURIComponent(p.sku)}`} className="btn-primary">ทำรายการ</Link>
         </div>

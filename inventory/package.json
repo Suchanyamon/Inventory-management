@@ -12,6 +12,7 @@
     "seed": "node scripts/seed.mjs",
     "compute-reorder": "node scripts/compute-reorder.mjs",
     "sync-reorder": "node scripts/sync-reorder.mjs",
+    "sync-storage": "node scripts/sync-storage.mjs",
     "test:ledger": "node scripts/test-ledger.mjs"
   },
   "dependencies": {

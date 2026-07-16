@@ -12,7 +12,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
 
   let query = supabase
     .from("v_product_stock")
-    .select("sku,name,category,size,color,box_pack_size,on_hand,full_boxes,loose_units,value_current_cost,stock_status", { count: "exact" })
+    .select("sku,name,category,size,color,box_pack_size,storage_location,on_hand,full_boxes,loose_units,value_current_cost,stock_status", { count: "exact" })
     .order("on_hand", { ascending: false })
     .range((page - 1) * PAGE, page * PAGE - 1);
   if (q) query = query.or(`sku.ilike.%${q}%,name.ilike.%${q}%`);
@@ -38,6 +38,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
             <tr>
               <th className="th">SKU</th>
               <th className="th">สินค้า</th>
+              <th className="th">ตำแหน่งเก็บ</th>
               <th className="th text-right">บรรจุ/กล่อง</th>
               <th className="th text-right">คงเหลือ</th>
               <th className="th text-right">กล่อง+เศษ</th>
@@ -53,7 +54,14 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
                   <td className="td font-mono text-xs">
                     <Link href={`/products/${encodeURIComponent(r.sku)}`} className="text-brand hover:underline">{r.sku}</Link>
                   </td>
-                  <td className="td max-w-[260px] truncate">{r.name}</td>
+                  <td className="td max-w-[220px] truncate">{r.name}</td>
+                  <td className="td whitespace-nowrap text-xs">
+                    {r.storage_location ? (
+                      <span className="font-medium text-brand">📍 {r.storage_location}</span>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
                   <td className="td text-right">{r.box_pack_size ?? "—"}</td>
                   <td className="td text-right font-medium">{num(Number(r.on_hand))}</td>
                   <td className="td text-right text-slate-500">
@@ -64,7 +72,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
                 </tr>
               );
             })}
-            {(!rows || rows.length === 0) && <tr><td className="td text-slate-400" colSpan={7}>ไม่พบสินค้า</td></tr>}
+            {(!rows || rows.length === 0) && <tr><td className="td text-slate-400" colSpan={8}>ไม่พบสินค้า</td></tr>}
           </tbody>
         </table>
       </div>
