@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+build/
+
+# env — ห้าม commit ค่าจริง (ตั้ง env vars ใน Vercel dashboard แทน)
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+.vercel
+next-env.d.ts

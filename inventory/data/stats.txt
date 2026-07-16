@@ -1,0 +1,47 @@
+SKU-file rows          : 5013
+Stock-file SKUs (DCMT/DCMTA) : 2898
+  matched to SKU file  : 2864 (98.8%)
+  with box_pack_size   : 2862 (98.8%)
+  MISSING box_pack_size: 36 (1.2%)
+  MISSING cost         : 34
+
+Units on hand  DCMT    : 41153
+Units on hand  DCMTA   : 207818
+Units total            : 248971
+Stock value DCMT (cost): 4523167.61
+Stock value DCMTA(cost): 20797838.67
+Stock value TOTAL      : 25321006.28
+
+Distinct box pack sizes: 12
+Top box pack sizes (size:count):
+    60 -> 823 SKUs
+    80 -> 694 SKUs
+    70 -> 487 SKUs
+    30 -> 253 SKUs
+    150 -> 199 SKUs
+    25 -> 109 SKUs
+    50 -> 108 SKUs
+    40 -> 96 SKUs
+    100 -> 74 SKUs
+    200 -> 12 SKUs
+    130 -> 4 SKUs
+    170 -> 3 SKUs
+
+Top categories (หมวด):
+    'U01PK000' -> 242
+    'F01PK000' -> 137
+    'U01CP000' -> 129
+    'F01PC000' -> 129
+    'U01KM000' -> 97
+    'U01CQ000' -> 80
+    'F01CP000' -> 74
+    'U01CA000' -> 70
+    'F02CP000' -> 67
+    'U01PE000' -> 63
+    'U01FPP00' -> 60
+    'M05JSP00' -> 59
+
+Sample merged rows:
+    {"sku": "01CA001F360XS", "name": "เสื้อโปโลพรีเมี่ยมผ้าCoolPlus CQA สีขาวล้วน", "model": "โปโล Coolplus", "category": "U01CA000", "color": "CQ01", "size": "XSญ", "cost_current": 149.87, "box_pack_size": 70.0, "dcmt": 10.0, "dcmta": 0, "on_hand": 10.0}
+    {"sku": "01CA001F3800S", "name": "เสื้อโปโลพรีเมี่ยมผ้าCoolPlus CQA สีขาวล้วน", "model": "โปโล Coolplus", "category": "U01CA000", "color": "CQ01", "size": "Sญ", "cost_current": 149.87, "box_pack_size": 70.0, "dcmt": 20.0, "dcmta": 0, "on_hand": 20.0}
+    {"sku": "01CA001F4000M", "name": "เสื้อโปโลพรีเมี่ยมผ้าCoolPlus CQA สีขาวล้วน", "model": "โปโล Coolplus", "category": "U01CA000", "color": "CQ01", "size": "Mญ", "cost_current": 149.87, "box_pack_size": 70.0, "dcmt": 38.0, "dcmta": 60.0, "on_hand": 98.0}

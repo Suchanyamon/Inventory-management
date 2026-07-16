@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --font-sans ถูกกำหนดโดย next/font (Kanit) ที่ <html> */
+
+/* ---------- Design tokens (light / dark โทนดำ) ---------- */
+:root {
+  color-scheme: light;
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: #e2e8f0;
+  --border-2: #f1f5f9;
+  --text: #1e293b;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --brand: #0f766e;
+}
+.dark {
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: #0d0d0f;
+  --surface-2: #161618;
+  --border: #292930;
+  --border-2: #1f1f23;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --faint: #71717a;
+  --brand: #2dd4bf;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), "Segoe UI", "Noto Sans Thai", system-ui, sans-serif;
+}
+
+/* Component classes — plain CSS (unlayered) ใช้ token โดยตรง เพื่อให้ปรับตามธีมได้ชัวร์ */
+.card {
+  border-radius: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500;
+  transition: all 0.15s;
+}
+.btn:disabled { opacity: 0.5; }
+.btn-primary:disabled, .btn-ghost:disabled { opacity: 0.5; }
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500;
+  transition: all 0.15s;
+  background: var(--brand); color: #fff;
+}
+.btn-primary:hover { filter: brightness(0.92); }
+.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500;
+  transition: all 0.15s;
+  background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+}
+.btn-ghost:hover { background: var(--surface-2); }
+.input {
+  width: 100%; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  outline: none;
+}
+.input:focus { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+.input::placeholder { color: var(--faint); }
+.label { display: block; margin-bottom: 0.25rem; font-size: 0.875rem; font-weight: 500; color: var(--muted); }
+.badge {
+  display: inline-flex; align-items: center; border-radius: 9999px; border: 1px solid transparent;
+  padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 500;
+}
+.th {
+  padding: 0.5rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint);
+}
+.td { padding: 0.5rem 0.75rem; font-size: 0.875rem; }
+
+/* ===========================================================
+   Dark-mode override รวมศูนย์ — map utility ที่เพจใช้ → โทนดำ
+   (.dark .x มี specificity สูงกว่า .x → ไม่ต้องแก้ทุกเพจ)
+   =========================================================== */
+.dark .bg-white { background-color: var(--surface); }
+.dark .bg-slate-50 { background-color: var(--surface-2); }
+.dark .bg-slate-100 { background-color: var(--border-2); }
+
+.dark .text-slate-800 { color: var(--text); }
+.dark .text-slate-700 { color: #e4e4e7; }
+.dark .text-slate-600 { color: #d4d4d8; }
+.dark .text-slate-500 { color: var(--muted); }
+.dark .text-slate-400 { color: #8b8b93; }
+.dark .text-slate-300 { color: var(--faint); }
+
+.dark .border-slate-100 { border-color: var(--border-2); }
+.dark .border-slate-200 { border-color: var(--border); }
+.dark .border-slate-300 { border-color: #3f3f46; }
+
+.dark .divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-2); }
+.dark .hover\:bg-slate-50:hover { background-color: var(--surface-2); }
+.dark .hover\:bg-slate-100:hover { background-color: var(--border-2); }
+
+.dark .text-brand { color: var(--brand); }
+.dark .text-emerald-600 { color: #34d399; }
+.dark .text-red-600 { color: #f87171; }
+.dark .text-orange-600 { color: #fb9a4b; }
+.dark .text-amber-600 { color: #e6c34d; }
+
+/* สถานะ/แจ้งเตือน (pill + toast) ให้พื้นเข้มบนดำ */
+.dark .bg-red-100, .dark .bg-red-50 { background-color: #2a1416; }
+.dark .text-red-700 { color: #f87171; }
+.dark .border-red-200 { border-color: #40201f; }
+.dark .bg-orange-100 { background-color: #2a1c0f; }
+.dark .text-orange-700 { color: #fb9a4b; }
+.dark .border-orange-200 { border-color: #3a2a12; }
+.dark .bg-amber-100 { background-color: #241f0d; }
+.dark .text-amber-700 { color: #e6c34d; }
+.dark .border-amber-200 { border-color: #3a3312; }
+.dark .bg-emerald-100, .dark .bg-emerald-50 { background-color: #0c2820; }
+.dark .text-emerald-700 { color: #34d399; }
+.dark .border-emerald-200 { border-color: #12402f; }
