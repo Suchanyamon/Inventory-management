@@ -19,6 +19,7 @@
 //     B) ถ้าต้องการเก็บเป็นส่วนตัว ใช้ Google Service Account แล้วเปลี่ยน fetchSheet()
 //        ไปเรียก Sheets API v4 (แชร์ชีตให้อีเมล service account เป็น Viewer)
 // =====================================================================
+import "./_env.mjs";
 import { createClient } from "@supabase/supabase-js";
 
 const SHEET_ID = process.env.SHEET_ID || "1j0n4pMjUKM0eATXb-CbJvtzEF4YZSpXLww6PLUh4HGI";

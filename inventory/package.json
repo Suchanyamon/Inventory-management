@@ -13,6 +13,9 @@
     "compute-reorder": "node scripts/compute-reorder.mjs",
     "sync-reorder": "node scripts/sync-reorder.mjs",
     "sync-storage": "node scripts/sync-storage.mjs",
+    "sync-monthly": "node scripts/sync-monthly.mjs",
+    "sync-turnover": "node scripts/sync-turnover.mjs",
+    "sync-all": "npm run sync-reorder && npm run sync-storage && npm run sync-monthly && npm run sync-turnover",
     "test:ledger": "node scripts/test-ledger.mjs"
   },
   "dependencies": {
