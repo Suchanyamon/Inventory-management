@@ -33,7 +33,13 @@ export default async function Dashboard() {
         {isAdmin && <SyncButton />}
       </div>
 
-      {/* KPI */}
+      {/* 1) มูลค่าคงคลัง · Input vs Output รายเดือน */}
+      <MonthlyFlow rows={(flow as FlowRow[]) || []} />
+
+      {/* 2) Inventory Turnover — Inv.Ratio & DSI */}
+      <InvTurnover rows={(turnover as InvRow[]) || []} />
+
+      {/* 3) KPI สรุป */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi title="มูลค่าสต๊อก (FIFO)" value={baht(totalValue)} accent="text-brand" />
         <Kpi title="จำนวนคงเหลือรวม" value={num(totalQty) + " ชิ้น"} />
@@ -58,12 +64,6 @@ export default async function Dashboard() {
           </div>
         ))}
       </div>
-
-      {/* monthly input vs output */}
-      <MonthlyFlow rows={(flow as FlowRow[]) || []} />
-
-      {/* inventory turnover: Inv.Ratio + DSI */}
-      <InvTurnover rows={(turnover as InvRow[]) || []} />
 
       {/* near expiry */}
       {nearExp && nearExp.length > 0 && (
