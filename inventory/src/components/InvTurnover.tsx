@@ -72,24 +72,6 @@ export default function InvTurnover({ rows }: { rows: InvRow[] }) {
           <LineChart title="Inv.Ratio" color={RATIO} months={months} values={ratios} fmt={f2} />
           <div className="mt-6" />
           <LineChart title="DSI (Days) 2026" color={DSI} months={months} values={dsis} fmt={f2} unit="วัน" />
-
-          {/* table */}
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b border-slate-100 bg-slate-50">
-                <tr><th className="th">เดือน</th><th className="th text-right">Inv.Ratio</th><th className="th text-right">DSI (Days)</th></tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {pts.map((r) => (
-                  <tr key={r.month} className="hover:bg-slate-50">
-                    <td className="td">{r.month}</td>
-                    <td className="td text-right" style={{ color: RATIO }}>{f2(Number(r.inv_ratio || 0))}</td>
-                    <td className="td text-right" style={{ color: DSI }}>{f2(Number(r.dsi || 0))}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </>
       )}
     </div>
