@@ -1,6 +1,7 @@
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { baht, num } from "@/lib/format";
 import MonthlyFlow, { type FlowRow } from "@/components/MonthlyFlow";
+import InvTurnover, { type InvRow } from "@/components/InvTurnover";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -10,11 +11,12 @@ const NEAR_EXPIRY_DAYS = Number(process.env.NEAR_EXPIRY_DAYS || 90);
 export default async function Dashboard() {
   const supabase = createSupabaseServer();
 
-  const [{ data: valByWh }, { count: reorderCount }, { data: nearExp }, { data: flow }] = await Promise.all([
+  const [{ data: valByWh }, { count: reorderCount }, { data: nearExp }, { data: flow }, { data: turnover }] = await Promise.all([
     supabase.from("v_valuation_by_warehouse").select("*"),
     supabase.from("v_reorder_list").select("*", { count: "exact", head: true }),
     supabase.from("v_near_expiry").select("sku,name,warehouse_code,lot_no,expiry_date,days_left,qty").lte("days_left", NEAR_EXPIRY_DAYS).gte("days_left", 0).limit(6),
     supabase.from("monthly_flow").select("business,category,month,month_idx,input_value,output_value,inventory_value").limit(2000),
+    supabase.from("inv_turnover").select("sheet,business,month,month_idx,inv_ratio,dsi").limit(500),
   ]);
 
   const totalValue = (valByWh || []).reduce((s, w) => s + Number(w.total_value_fifo || 0), 0);
@@ -52,6 +54,9 @@ export default async function Dashboard() {
 
       {/* monthly input vs output */}
       <MonthlyFlow rows={(flow as FlowRow[]) || []} />
+
+      {/* inventory turnover: Inv.Ratio + DSI */}
+      <InvTurnover rows={(turnover as InvRow[]) || []} />
 
       {/* near expiry */}
       {nearExp && nearExp.length > 0 && (
