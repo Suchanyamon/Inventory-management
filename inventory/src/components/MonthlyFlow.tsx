@@ -26,6 +26,14 @@ function compact(n: number): string {
   if (a >= 1e3) return s + Math.round(a / 1e3) + "K";
   return String(Math.round(n));
 }
+// label ค่าบนกราฟ — ทศนิยม 2 ตำแหน่ง (M/K)
+function lab2(n: number): string {
+  const s = n < 0 ? "-" : "";
+  const a = Math.abs(n);
+  if (a >= 1e6) return s + (a / 1e6).toFixed(2) + "M";
+  if (a >= 1e3) return s + (a / 1e3).toFixed(2) + "K";
+  return n.toFixed(2);
+}
 
 export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
   const [biz, setBiz] = useState("ALL");
@@ -109,7 +117,7 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
               {months.map((mo, i) => (
                 <div key={mo} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${((i + 0.5) / months.length) * 100}%`, top: `${yInv(byMonth[mo].inv)}%` }}>
                   <div className="h-2.5 w-2.5 rounded-full border-2 border-white" style={{ background: INV }} title={`${mo}: ${baht(byMonth[mo].inv)}`} />
-                  <div className="absolute left-1/2 -top-4 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium" style={{ color: INV }}>{compact(byMonth[mo].inv)}</div>
+                  <div className="absolute left-1/2 -top-4 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium" style={{ color: INV }}>{lab2(byMonth[mo].inv)}</div>
                 </div>
               ))}
             </div>
@@ -139,8 +147,12 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
                   const outH = (-d.output / range) * PLOT_H;
                   return (
                     <div key={mo} className="relative flex-1">
-                      <div className="group absolute rounded-t" style={{ left: "14%", width: "32%", bottom: PLOT_H - zeroY, height: Math.max(inH, d.input > 0 ? 2 : 0), background: IN }} title={`${mo} Input ${baht(d.input)}`} />
-                      <div className="group absolute rounded-b" style={{ left: "54%", width: "32%", top: zeroY, height: Math.max(outH, d.output < 0 ? 2 : 0), background: OUT }} title={`${mo} Output ${baht(d.output)}`} />
+                      <div className="absolute rounded-t" style={{ left: "14%", width: "32%", bottom: PLOT_H - zeroY, height: Math.max(inH, d.input > 0 ? 2 : 0), background: IN }} title={`${mo} Input ${baht(d.input)}`}>
+                        {d.input > 0 && <span className="absolute bottom-full left-1/2 mb-0.5 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium text-brand">{lab2(d.input)}</span>}
+                      </div>
+                      <div className="absolute rounded-b" style={{ left: "54%", width: "32%", top: zeroY, height: Math.max(outH, d.output < 0 ? 2 : 0), background: OUT }} title={`${mo} Output ${baht(d.output)}`}>
+                        {d.output < 0 && <span className="absolute top-full left-1/2 mt-0.5 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium" style={{ color: OUT }}>{lab2(d.output)}</span>}
+                      </div>
                     </div>
                   );
                 })}

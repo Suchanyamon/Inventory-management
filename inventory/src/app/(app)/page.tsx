@@ -1,5 +1,5 @@
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { baht, num, STATUS_LABEL } from "@/lib/format";
+import { baht, num } from "@/lib/format";
 import MonthlyFlow, { type FlowRow } from "@/components/MonthlyFlow";
 import Link from "next/link";
 
@@ -10,9 +10,8 @@ const NEAR_EXPIRY_DAYS = Number(process.env.NEAR_EXPIRY_DAYS || 90);
 export default async function Dashboard() {
   const supabase = createSupabaseServer();
 
-  const [{ data: valByWh }, { data: reorder }, { count: reorderCount }, { data: nearExp }, { data: flow }] = await Promise.all([
+  const [{ data: valByWh }, { count: reorderCount }, { data: nearExp }, { data: flow }] = await Promise.all([
     supabase.from("v_valuation_by_warehouse").select("*"),
-    supabase.from("v_reorder_list").select("sku,name,on_hand,box_pack_size,stock_status,suggested_order_qty,suggested_boxes").limit(8),
     supabase.from("v_reorder_list").select("*", { count: "exact", head: true }),
     supabase.from("v_near_expiry").select("sku,name,warehouse_code,lot_no,expiry_date,days_left,qty").lte("days_left", NEAR_EXPIRY_DAYS).gte("days_left", 0).limit(6),
     supabase.from("monthly_flow").select("business,category,month,month_idx,input_value,output_value,inventory_value").limit(2000),
@@ -53,46 +52,6 @@ export default async function Dashboard() {
 
       {/* monthly input vs output */}
       <MonthlyFlow rows={(flow as FlowRow[]) || []} />
-
-      {/* reorder preview */}
-      <div className="card">
-        <div className="flex items-center justify-between border-b border-slate-100 p-4">
-          <h2 className="font-semibold">สินค้าที่ต้องสั่งเพิ่ม</h2>
-          <Link href="/reorder" className="text-sm text-brand hover:underline">ดูทั้งหมด →</Link>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-slate-100 bg-slate-50">
-              <tr>
-                <th className="th">SKU</th>
-                <th className="th">สินค้า</th>
-                <th className="th">สถานะ</th>
-                <th className="th text-right">คงเหลือ</th>
-                <th className="th text-right">แนะนำสั่ง</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {(reorder || []).map((r) => {
-                const st = STATUS_LABEL[r.stock_status] || STATUS_LABEL.unknown;
-                return (
-                  <tr key={r.sku}>
-                    <td className="td font-mono text-xs">{r.sku}</td>
-                    <td className="td max-w-[220px] truncate">{r.name}</td>
-                    <td className="td"><span className={"badge " + st.cls}>{st.text}</span></td>
-                    <td className="td text-right">{num(Number(r.on_hand))}</td>
-                    <td className="td text-right font-medium">
-                      {r.suggested_order_qty ? `${num(Number(r.suggested_order_qty))} (${num(Number(r.suggested_boxes))} กล่อง)` : "-"}
-                    </td>
-                  </tr>
-                );
-              })}
-              {(!reorder || reorder.length === 0) && (
-                <tr><td className="td text-slate-400" colSpan={5}>ไม่มีสินค้าต้องสั่งเพิ่ม 🎉</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       {/* near expiry */}
       {nearExp && nearExp.length > 0 && (
