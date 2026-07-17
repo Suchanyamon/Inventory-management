@@ -19,7 +19,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
         <nav className="flex-1 space-y-1">
-          <NavLink href="/" label="แดชบอร์ด" icon="📊" />
+          <NavLink href="/" label="แดชบอร์ด POLOMAKER" icon="📊" />
+          <NavLink href="/pwc19" label="แดชบอร์ด PWC19" icon="🏬" />
           <NavLink href="/operations" label="รับ-เบิก-โอน" icon="🔁" />
           <NavLink href="/scan" label="สแกนบาร์โค้ด" icon="📷" />
           <NavLink href="/products" label="สินค้า" icon="🏷️" />
@@ -55,9 +56,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
         <main className="mx-auto max-w-7xl p-4 md:p-6">{children}</main>
         {/* Mobile bottom nav */}
-        <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-slate-200 bg-white md:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-slate-200 bg-white md:hidden">
           {[
-            { href: "/", icon: "📊", label: "หน้าหลัก" },
+            { href: "/", icon: "📊", label: "POLO" },
+            { href: "/pwc19", icon: "🏬", label: "PWC19" },
             { href: "/operations", icon: "🔁", label: "ทำรายการ" },
             { href: "/scan", icon: "📷", label: "สแกน" },
             { href: "/reorder", icon: "🛒", label: "สั่งซื้อ" },
