@@ -22,6 +22,7 @@ const GUTTER = 56;
 const PLOT_H = 130;
 
 const f2 = (n: number) => n.toFixed(2);
+const f1 = (n: number) => n.toFixed(1);
 
 export default function InvTurnover({ rows }: { rows: InvRow[] }) {
   const [sheet, setSheet] = useState("Over");
@@ -71,7 +72,7 @@ export default function InvTurnover({ rows }: { rows: InvRow[] }) {
         <>
           <LineChart title="Inv.Ratio" color={RATIO} months={months} values={ratios} fmt={f2} />
           <div className="mt-6" />
-          <LineChart title="DSI (Days) 2026" color={DSI} months={months} values={dsis} fmt={f2} unit="วัน" />
+          <LineChart title="DSI (Days) 2026" color={DSI} months={months} values={dsis} fmt={f1} unit="วัน" />
         </>
       )}
     </div>
