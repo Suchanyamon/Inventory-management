@@ -23,11 +23,14 @@ export default async function DashboardPolomaker() {
         {isAdmin && <SyncButton />}
       </div>
 
-      {/* 1) มูลค่าคงคลัง · Input vs Output รายเดือน */}
-      <MonthlyFlow rows={(flow as FlowRow[]) || []} />
+      {/* 1) มูลค่าคงคลัง · Input vs Output รายเดือน (กราฟ + เทียบเดือน) */}
+      <MonthlyFlow rows={(flow as FlowRow[]) || []} variant="charts" />
 
       {/* 2) Inventory Turnover — Inv.Ratio & DSI */}
       <InvTurnover rows={(turnover as InvRow[]) || []} />
+
+      {/* 3) ตารางแยกหมวด (ล่างสุด) */}
+      <MonthlyFlow rows={(flow as FlowRow[]) || []} variant="table" />
     </div>
   );
 }

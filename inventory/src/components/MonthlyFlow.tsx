@@ -35,7 +35,7 @@ function lab2(n: number): string {
   return n.toFixed(2);
 }
 
-export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
+export default function MonthlyFlow({ rows, variant = "full" }: { rows: FlowRow[]; variant?: "full" | "charts" | "table" }) {
   const [biz, setBiz] = useState("ALL");
 
   const businesses = useMemo(() => BIZ_ORDER.filter((b) => rows.some((r) => r.business === b)), [rows]);
@@ -86,12 +86,17 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
   const range = inMax - outMin || 1;
   const zeroY = (inMax / range) * PLOT_H; // px จากบนถึงเส้นศูนย์
 
+  // ---- เดือนที่มี flow จริง (Input หรือ Output ≠ 0) → ใช้เทียบเดือนล่าสุด vs ก่อนหน้า ----
+  const flowMonths = months.filter((mo) => byMonth[mo].input !== 0 || byMonth[mo].output !== 0);
+  const cmpLast = flowMonths[flowMonths.length - 1];
+  const cmpPrev = flowMonths[flowMonths.length - 2];
+
   const empty = months.length === 0;
 
   return (
     <div className="card p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-semibold">มูลค่าคงคลัง · Input vs Output รายเดือน</h2>
+        <h2 className="font-semibold">{variant === "table" ? "Input/Output/คงคลัง แยกตามหมวด" : "มูลค่าคงคลัง · Input vs Output รายเดือน"}</h2>
         <span className="text-xs text-slate-400">เลือกกลุ่มธุรกิจได้</span>
       </div>
 
@@ -104,6 +109,7 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
         <div className="py-10 text-center text-sm text-slate-400">ยังไม่มีข้อมูล (ต้องเข้าสู่ระบบเพื่อดู)</div>
       ) : (
         <>
+          {variant !== "table" && <>
           {/* ===== กราฟบน: มูลค่าคงคลัง (เส้น) ===== */}
           <div className="mb-1 flex items-center gap-2 text-sm"><Dot color={INV} /> มูลค่าคงคลังปลายเดือน</div>
           <div className="flex gap-2">
@@ -161,6 +167,20 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
           </div>
           <MonthAxis months={months} />
 
+          {/* ===== เทียบเดือนล่าสุด → ก่อนหน้า ===== */}
+          {cmpLast && cmpPrev && (
+            <div className="mt-6 rounded-lg border border-slate-200 p-3">
+              <div className="mb-2 text-sm font-medium">เทียบเดือนล่าสุด: {cmpPrev} → {cmpLast}</div>
+              <div className="grid grid-cols-3 gap-3">
+                <CompareStat label="Input" prev={byMonth[cmpPrev].input} last={byMonth[cmpLast].input} color={IN} />
+                <CompareStat label="Output" prev={-byMonth[cmpPrev].output} last={-byMonth[cmpLast].output} color={OUT} />
+                <CompareStat label="มูลค่าคงคลัง" prev={byMonth[cmpPrev].inv} last={byMonth[cmpLast].inv} color={INV} />
+              </div>
+            </div>
+          )}
+          </>}
+
+          {variant !== "charts" && <>
           {/* ===== ตารางแยกหมวด ===== */}
           <div className="mt-6 overflow-x-auto">
             <table className="w-full">
@@ -186,7 +206,25 @@ export default function MonthlyFlow({ rows }: { rows: FlowRow[] }) {
               </tbody>
             </table>
           </div>
+          </>}
         </>
+      )}
+    </div>
+  );
+}
+
+function CompareStat({ label, prev, last, color }: { label: string; prev: number; last: number; color: string }) {
+  const pct = prev === 0 ? null : ((last - prev) / Math.abs(prev)) * 100;
+  const up = pct != null && pct >= 0;
+  return (
+    <div>
+      <div className="text-xs text-slate-500">{label}</div>
+      <div className="text-base font-bold" style={{ color }}>{baht(last)}</div>
+      <div className="text-[11px] text-slate-400">ก่อนหน้า {baht(prev)}</div>
+      {pct != null && (
+        <span className={"badge mt-1 " + (up ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-red-100 text-red-700 border-red-200")}>
+          {up ? "▲" : "▼"} {Math.abs(pct).toFixed(1)}%
+        </span>
       )}
     </div>
   );
