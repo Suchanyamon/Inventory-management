@@ -2,6 +2,8 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { baht, num } from "@/lib/format";
 import MonthlyFlow, { type FlowRow } from "@/components/MonthlyFlow";
 import InvTurnover, { type InvRow } from "@/components/InvTurnover";
+import SyncButton from "@/components/SyncButton";
+import { getSessionProfile } from "@/lib/auth";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +12,8 @@ const NEAR_EXPIRY_DAYS = Number(process.env.NEAR_EXPIRY_DAYS || 90);
 
 export default async function Dashboard() {
   const supabase = createSupabaseServer();
+  const { profile } = await getSessionProfile();
+  const isAdmin = profile?.role === "admin";
 
   const [{ data: valByWh }, { count: reorderCount }, { data: nearExp }, { data: flow }, { data: turnover }] = await Promise.all([
     supabase.from("v_valuation_by_warehouse").select("*"),
@@ -24,7 +28,10 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-6 pb-16">
-      <h1 className="text-xl font-semibold">แดชบอร์ด</h1>
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="text-xl font-semibold">แดชบอร์ด</h1>
+        {isAdmin && <SyncButton />}
+      </div>
 
       {/* KPI */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

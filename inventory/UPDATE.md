@@ -45,6 +45,29 @@
    ```
 3. เปิดเว็บ รีเฟรช → เห็นตัวเลขใหม่
 
+---
+
+## 🔄 ปุ่ม "Sync ข้อมูล" ในแอป (ดึงจากคลาวด์ ไม่ต้องรันในเครื่อง)
+
+แดชบอร์ด (เฉพาะ admin) มีปุ่ม **🔄 Sync ข้อมูล** กดแล้วเซิร์ฟเวอร์จะดึง:
+- **Excel** จาก OneDrive (Input/Output/คงคลัง + Inv.Ratio/DSI)
+- **Google Sheets** (ต้องสั่งเพิ่ม + ตำแหน่งเก็บ)
+แล้วอัปเดต DB ให้อัตโนมัติ — รายงานผลรายแหล่งว่าสำเร็จกี่แถว
+
+### ตั้งค่าให้ปุ่มทำงาน (บน Vercel → Project → Settings → Environment Variables)
+| ตัวแปร | ค่า |
+|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | จาก Supabase → Settings → API (Secret) |
+| `ONEDRIVE_XLSB_URL` | ลิงก์ดาวน์โหลดตรงของไฟล์ Excel บน OneDrive |
+
+**วิธีได้ ONEDRIVE_XLSB_URL:**
+1. OneDrive → คลิกขวาไฟล์ `_DATA Inventory _ Month 2026.xlsb` → **แชร์** → ตั้ง "ทุกคนที่มีลิงก์" → Copy link
+2. เติม `&download=1` ต่อท้ายลิงก์ (ให้เป็นดาวน์โหลดตรง ไม่ใช่หน้าเว็บ)
+3. วางเป็นค่า `ONEDRIVE_XLSB_URL` ใน Vercel → Redeploy 1 ครั้ง
+
+> **Google Sheets** (reorder/storage) ให้ทำงานผ่านปุ่ม ต้องแชร์ชีตแบบ "ทุกคนที่มีลิงก์ = ผู้อ่าน" ด้วย
+> ถ้าไม่อยากแชร์สาธารณะ ใช้ `npm run sync-reorder` / `sync-storage` ในเครื่องแทนได้ (ปุ่มจะรายงานว่าส่วนนั้น error เฉยๆ ไม่กระทบส่วนอื่น)
+
 ## หมายเหตุ
 - **Google Sheets**: sync ได้ต้องแชร์ชีตแบบ "ทุกคนที่มีลิงก์ = ผู้อ่าน" (หรือใช้ service account — ดูคอมเมนต์ใน `scripts/sync-reorder.mjs`)
 - **Excel**: ไฟล์ต้องอยู่ที่ `Desktop\_DATA Inventory _ Month 2026.xlsb` (เปลี่ยน path ได้: `python scripts/build-monthly-flow.py "D:\path\file.xlsb"`)
