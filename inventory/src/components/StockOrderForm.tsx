@@ -244,7 +244,7 @@ function BlockRows({ b, editCell, editMeta, colw }: {
   editMeta: (code: string, field: "name" | "grade" | "target" | "note", v: string) => void;
   colw: string;
 }) {
-  const YEL = { background: "#ffff00" };
+  const YEL = { background: "#dce6f1" };
   return (
     <>
       {/* code header row */}
@@ -279,7 +279,7 @@ function BlockRows({ b, editCell, editMeta, colw }: {
               <td key={key} className={"border border-slate-400 p-0 " + colw + (m.red ? " text-red-600" : m.bold ? " font-bold" : "")}>
                 {has && editable
                   ? <input value={val} onChange={(e) => editCell(b.code, key, m.field as keyof Cell, e.target.value)}
-                      className={"h-full w-full bg-transparent px-0.5 py-0.5 text-center outline-none focus:bg-yellow-100 " + (m.bold ? "text-emerald-700 font-bold" : "")} />
+                      className={"h-full w-full bg-transparent px-0.5 py-0.5 text-center outline-none focus:bg-sky-100 " + (m.bold ? "text-emerald-700 font-bold" : "")} />
                   : <span className="block px-0.5 py-0.5">{has ? num(n(val)) : ""}</span>}
               </td>
             );
