@@ -97,7 +97,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
       .sort((a, b) => b.orderSum - a.orderSum);
   }, [codeList, active, term, onlyNeed]);
 
-  const MAX_CODES = 6;
+  const MAX_CODES = 7;
   const addCode = (code: string) =>
     setBlocks((prev) => (prev.some((b) => b.code === code) || prev.length >= MAX_CODES ? prev : [...prev, buildBlock(byCode.get(code) || [])]));
   const removeBlock = (code: string) => setBlocks((prev) => prev.filter((b) => b.code !== code));
@@ -116,14 +116,14 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
           main { padding: 0 !important; max-width: none !important; }
           .print-area { border: none !important; width: 100% !important; overflow: visible !important; }
           .print-area, .print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .print-area table { width: 100% !important; font-size: 8px !important; }
-          .print-area th, .print-area td { padding: 0 1px !important; }
-          .print-area input, .print-area span { font-size: 8px !important; }
-          .print-area .form-title { font-size: 15px !important; }
-          .print-area .logo-box { width: 150px !important; }
-          .print-area .logo-box img { height: 34px !important; }
-          .print-area .sign-area { padding: 10px 24px !important; font-size: 9px !important; gap: 8px 32px !important; }
-          @page { size: 8.5in 11in; margin: 8mm; }
+          .print-area table { width: 100% !important; font-size: 7px !important; }
+          .print-area th, .print-area td { padding: 0 1px !important; line-height: 1.1 !important; }
+          .print-area input, .print-area span { font-size: 7px !important; }
+          .print-area .form-title { font-size: 14px !important; }
+          .print-area .logo-box { width: 140px !important; }
+          .print-area .logo-box img { height: 30px !important; }
+          .print-area .sign-area { padding: 8px 24px !important; font-size: 9px !important; gap: 6px 32px !important; }
+          @page { size: A4 portrait; margin: 7mm; }
         }
       `}</style>
 
@@ -188,7 +188,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
           <div className="no-print flex flex-wrap items-center gap-2">
             <button onClick={() => window.print()} className="btn-primary">🖨️ สร้างเอกสาร / พิมพ์</button>
             <button onClick={() => setBlocks([])} className="btn-ghost">ล้างฟอร์ม</button>
-            <span className="text-xs text-slate-400">* แก้ไขได้ทุกช่อง — รวมสุทธิคำนวณอัตโนมัติ · สูงสุด 6 รหัส/หน้า</span>
+            <span className="text-xs text-slate-400">* แก้ไขได้ทุกช่อง — รวมสุทธิคำนวณอัตโนมัติ · สูงสุด 7 รหัส/หน้า A4</span>
           </div>
 
           <div className="print-area overflow-x-auto border-2 border-slate-900 bg-white p-0 text-slate-900 dark:bg-white"
