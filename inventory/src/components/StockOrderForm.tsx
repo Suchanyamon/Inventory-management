@@ -47,7 +47,7 @@ function buildBlock(rows: SizeRow[]): Block {
     cells[`${gender}:${key}`] = { c: String(cur), sw: String(cur + wip), r: String(rp), o: String(rp > 0 ? round10(rp) : 0) };
   }
   const f = rows[0];
-  return { code: f.code, name: f.name || "", grade: f.grade || "", target: f.annual_target == null ? "" : String(f.annual_target), note: "ตัดเติมสต๊อก", cells };
+  return { code: f.code, name: f.name || "", grade: f.grade || "", target: f.annual_target == null ? "" : String(f.annual_target), note: "", cells };
 }
 
 const METRICS: { label: string; field: keyof Cell | "pending"; bold?: boolean; red?: boolean }[] = [
