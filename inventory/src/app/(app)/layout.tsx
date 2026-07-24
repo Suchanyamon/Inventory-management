@@ -24,7 +24,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <NavLink href="/operations" label="รับ-เบิก-โอน" icon="🔁" />
           <NavLink href="/scan" label="สแกนบาร์โค้ด" icon="📷" />
           <NavLink href="/products" label="สินค้า" icon="🏷️" />
-          <NavLink href="/reorder" label="ต้องสั่งเพิ่ม" icon="🛒" />
           <NavLink href="/order" label="ขออนุมัติสั่งสต๊อก" icon="📝" />
           <NavLink href="/reports" label="รายงานมูลค่า" icon="💰" />
           <NavLink href="/movements" label="ประวัติเคลื่อนไหว" icon="🧾" />
@@ -64,7 +63,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             { href: "/pwc19", icon: "🏬", label: "PWC19" },
             { href: "/operations", icon: "🔁", label: "ทำรายการ" },
             { href: "/scan", icon: "📷", label: "สแกน" },
-            { href: "/reorder", icon: "🛒", label: "สั่งซื้อ" },
+            { href: "/order", icon: "📝", label: "สั่งสต๊อก" },
             { href: "/products", icon: "🏷️", label: "สินค้า" },
           ].map((i) => (
             <a key={i.href} href={i.href} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-slate-600">
