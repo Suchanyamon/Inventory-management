@@ -63,7 +63,7 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi title="มูลค่าสต๊อก (FIFO)" value={baht(totalValue)} accent="text-brand" />
         <Kpi title="จำนวนคงเหลือรวม" value={num(totalQty) + " ชิ้น"} />
-        <Kpi title="ต้องสั่งเพิ่ม" value={num(reorderCount || 0) + " รายการ"} accent="text-orange-600" href="/reorder" />
+        <Kpi title="ต้องสั่งเพิ่ม" value={num(reorderCount || 0) + " รายการ"} accent="text-orange-600" href="/order" />
         <Kpi title="ใกล้หมดอายุ" value={num((nearExp || []).length) + " ล็อต"} accent="text-amber-600" />
       </div>
 
