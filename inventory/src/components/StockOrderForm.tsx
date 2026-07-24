@@ -55,7 +55,6 @@ const METRICS: { label: string; field: keyof Cell | "pending"; bold?: boolean; r
   { label: "จำนวนคงคลังรวมค้างผลิต", field: "sw" },
   { label: "จุดสั่งซื้อ (Reorder Point)", field: "r" },
   { label: "จำนวนที่ขอผลิต/สั่งตัด", field: "o", bold: true },
-  { label: "สต๊อก+WIP+รออนุมัติ", field: "pending", red: true },
 ];
 const cellVal = (field: keyof Cell | "pending", c: Cell | undefined): string => {
   if (!c) return "";
@@ -98,8 +97,9 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
       .sort((a, b) => b.orderSum - a.orderSum);
   }, [codeList, active, term, onlyNeed]);
 
+  const MAX_CODES = 6;
   const addCode = (code: string) =>
-    setBlocks((prev) => (prev.some((b) => b.code === code) ? prev : [...prev, buildBlock(byCode.get(code) || [])]));
+    setBlocks((prev) => (prev.some((b) => b.code === code) || prev.length >= MAX_CODES ? prev : [...prev, buildBlock(byCode.get(code) || [])]));
   const removeBlock = (code: string) => setBlocks((prev) => prev.filter((b) => b.code !== code));
   const editCell = (code: string, key: string, field: keyof Cell, v: string) =>
     setBlocks((prev) => prev.map((b) => b.code !== code ? b : { ...b, cells: { ...b.cells, [key]: { ...(b.cells[key] || { c: "", sw: "", r: "", o: "" }), [field]: v } } }));
@@ -115,8 +115,14 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
         @media print {
           aside, header, nav.fixed, .no-print { display: none !important; }
           main { padding: 0 !important; max-width: none !important; }
-          .print-area { border: none !important; }
-          @page { size: A4 landscape; margin: 6mm; }
+          .print-area { border: none !important; width: 100% !important; overflow: visible !important; }
+          .print-area table { width: 100% !important; font-size: 7.5px !important; }
+          .print-area th, .print-area td { min-width: 0 !important; width: auto !important; padding: 0 1px !important; }
+          .print-area .form-title { font-size: 15px !important; }
+          .print-area .logo-box { width: 150px !important; }
+          .print-area .logo-box img { height: 34px !important; }
+          .print-area .sign-area { padding: 10px 24px !important; font-size: 9px !important; gap: 8px 32px !important; }
+          @page { size: 8.5in 11in; margin: 8mm; }
         }
       `}</style>
 
@@ -141,7 +147,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
             <input type="checkbox" checked={onlyNeed} onChange={(e) => setOnlyNeed(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
             เฉพาะที่ต้องสั่ง
           </label>
-          {blocks.length > 0 && <span className="text-sm text-brand">เพิ่มในฟอร์มแล้ว {blocks.length} รหัส</span>}
+          {blocks.length > 0 && <span className="text-sm text-brand">เพิ่มในฟอร์มแล้ว {blocks.length}/{MAX_CODES} รหัส{blocks.length >= MAX_CODES ? " (สูงสุดแล้ว · 1 หน้ากระดาษ)" : ""}</span>}
         </div>
         <div className="card max-h-[320px] overflow-auto">
           <table className="w-full text-sm">
@@ -164,7 +170,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
                     <td className="td text-right">
                       {added
                         ? <button onClick={() => removeBlock(r.code)} className="btn-ghost !px-3 !py-1 text-xs text-red-500">เอาออก</button>
-                        : <button onClick={() => addCode(r.code)} className="btn-primary !px-3 !py-1 text-xs">+ เพิ่มลงฟอร์ม</button>}
+                        : <button onClick={() => addCode(r.code)} disabled={blocks.length >= MAX_CODES} className="btn-primary !px-3 !py-1 text-xs disabled:opacity-40">+ เพิ่มลงฟอร์ม</button>}
                     </td>
                   </tr>
                 );
@@ -187,11 +193,11 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
           <div className="print-area overflow-x-auto border-2 border-slate-900 bg-white p-0 text-slate-900 dark:bg-white">
             {/* header */}
             <div className="flex items-stretch border-b-2 border-slate-900">
-              <div className="flex w-[220px] shrink-0 items-center justify-center border-r border-slate-900 p-2">
+              <div className="logo-box flex w-[220px] shrink-0 items-center justify-center border-r border-slate-900 p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/pmk-logo.png" alt="PMK" className="h-12 w-auto" />
               </div>
-              <div className="flex flex-1 items-center justify-center px-4 py-3 text-center text-2xl font-bold">
+              <div className="form-title flex flex-1 items-center justify-center px-4 py-3 text-center text-2xl font-bold">
                 แบบฟอร์มขออนุมัติสั่งผลิตสินค้าสำเร็จรูป
               </div>
             </div>
@@ -225,7 +231,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
             </table>
 
             {/* signatures */}
-            <div className="grid grid-cols-2 gap-x-12 gap-y-8 border-t-2 border-slate-900 px-8 py-6 text-xs">
+            <div className="sign-area grid grid-cols-2 gap-x-12 gap-y-8 border-t-2 border-slate-900 px-8 py-6 text-xs">
               <Sign role="ผู้ขออนุมัติ" title="ผู้จัดการส่วนโลจิสติกส์การขาย" />
               <Sign role="ผู้อนุมัติร่วม" title="ผู้อำนวยการฝ่ายพัฒนาธุรกิจ" />
               <Sign role="ผู้อนุมัติร่วม" title="รองผู้อำนวยการฝ่ายพัฒนาธุรกิจ" />
