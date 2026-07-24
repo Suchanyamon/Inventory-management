@@ -107,7 +107,6 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
     setBlocks((prev) => prev.map((b) => (b.code === code ? { ...b, [field]: v } : b)));
 
   const grandTotal = blocks.reduce((s, b) => s + rowTotal(b.cells, "o"), 0);
-  const COLW = "min-w-[34px] w-[34px]";
 
   return (
     <div className="space-y-5 pb-16">
@@ -116,8 +115,10 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
           aside, header, nav.fixed, .no-print { display: none !important; }
           main { padding: 0 !important; max-width: none !important; }
           .print-area { border: none !important; width: 100% !important; overflow: visible !important; }
-          .print-area table { width: 100% !important; font-size: 7.5px !important; }
-          .print-area th, .print-area td { min-width: 0 !important; width: auto !important; padding: 0 1px !important; }
+          .print-area, .print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .print-area table { width: 100% !important; font-size: 8px !important; }
+          .print-area th, .print-area td { padding: 0 1px !important; }
+          .print-area input, .print-area span { font-size: 8px !important; }
           .print-area .form-title { font-size: 15px !important; }
           .print-area .logo-box { width: 150px !important; }
           .print-area .logo-box img { height: 34px !important; }
@@ -187,10 +188,11 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
           <div className="no-print flex flex-wrap items-center gap-2">
             <button onClick={() => window.print()} className="btn-primary">🖨️ สร้างเอกสาร / พิมพ์</button>
             <button onClick={() => setBlocks([])} className="btn-ghost">ล้างฟอร์ม</button>
-            <span className="text-xs text-slate-400">* แก้ไขได้ทุกช่อง — แถวสีฟ้าและรวมสุทธิคำนวณอัตโนมัติ</span>
+            <span className="text-xs text-slate-400">* แก้ไขได้ทุกช่อง — รวมสุทธิคำนวณอัตโนมัติ · สูงสุด 6 รหัส/หน้า</span>
           </div>
 
-          <div className="print-area overflow-x-auto border-2 border-slate-900 bg-white p-0 text-slate-900 dark:bg-white">
+          <div className="print-area overflow-x-auto border-2 border-slate-900 bg-white p-0 text-slate-900 dark:bg-white"
+            style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" } as React.CSSProperties}>
             {/* header */}
             <div className="flex items-stretch border-b-2 border-slate-900">
               <div className="logo-box flex w-[220px] shrink-0 items-center justify-center border-r border-slate-900 p-2">
@@ -202,25 +204,30 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
               </div>
             </div>
 
-            <table className="w-full border-collapse text-center text-[10px] leading-tight">
+            <table className="w-full table-fixed border-collapse text-center text-[10px] leading-tight">
+              <colgroup>
+                <col style={{ width: "14%" }} />
+                {ALL_KEYS.map((k) => <col key={k} style={{ width: "4.15%" }} />)}
+                <col style={{ width: "6%" }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th rowSpan={2} className="border border-slate-500 px-2 py-1 text-left align-bottom min-w-[150px]">รายละเอียดสินค้า</th>
+                  <th rowSpan={2} className="border border-slate-500 px-1 py-1 text-left align-bottom">รายละเอียดสินค้า</th>
                   {GROUPS.map((g) => (
                     <th key={g.label} colSpan={g.sizes.length} className="border border-slate-500 px-1 py-0.5">{g.label}</th>
                   ))}
-                  <th rowSpan={2} className={"border border-slate-500 px-1 align-bottom " + COLW}>Free Size</th>
-                  <th rowSpan={2} className="border border-slate-500 px-1 align-bottom min-w-[52px]">รวมสุทธิ</th>
+                  <th rowSpan={2} className="border border-slate-500 px-0.5 align-bottom leading-none">Free<br />Size</th>
+                  <th rowSpan={2} className="border border-slate-500 px-0.5 align-bottom leading-none">รวม<br />สุทธิ</th>
                 </tr>
                 <tr>
                   {GROUPS.flatMap((g) => g.sizes.map((s) => (
-                    <th key={`${g.gender}:${s}`} className={"border border-slate-500 px-0.5 py-0.5 font-medium " + COLW}>{s}</th>
+                    <th key={`${g.gender}:${s}`} className="border border-slate-500 px-0.5 py-0.5 font-medium">{s}</th>
                   )))}
                 </tr>
               </thead>
               <tbody>
                 {blocks.map((b) => (
-                  <BlockRows key={b.code} b={b} editCell={editCell} editMeta={editMeta} colw={COLW} />
+                  <BlockRows key={b.code} b={b} editCell={editCell} editMeta={editMeta} />
                 ))}
                 {/* grand total */}
                 <tr>
@@ -244,11 +251,10 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
   );
 }
 
-function BlockRows({ b, editCell, editMeta, colw }: {
+function BlockRows({ b, editCell, editMeta }: {
   b: Block;
   editCell: (code: string, key: string, field: keyof Cell, v: string) => void;
   editMeta: (code: string, field: "name" | "grade" | "target" | "note", v: string) => void;
-  colw: string;
 }) {
   const YEL = { background: "#dce6f1" };
   return (
@@ -282,7 +288,7 @@ function BlockRows({ b, editCell, editMeta, colw }: {
             const editable = m.field !== "pending";
             const val = cellVal(m.field, c);
             return (
-              <td key={key} className={"border border-slate-400 p-0 " + colw + (m.red ? " text-red-600" : m.bold ? " font-bold" : "")}>
+              <td key={key} className={"border border-slate-400 p-0 " + (m.red ? "text-red-600" : m.bold ? "font-bold" : "")}>
                 {has && editable
                   ? <input value={val} onChange={(e) => editCell(b.code, key, m.field as keyof Cell, e.target.value)}
                       className={"h-full w-full bg-transparent px-0.5 py-0.5 text-center outline-none focus:bg-sky-100 " + (m.bold ? "text-emerald-700 font-bold" : "")} />
