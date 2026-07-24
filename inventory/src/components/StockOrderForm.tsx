@@ -114,7 +114,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
         @media print {
           aside, header, nav.fixed, .no-print { display: none !important; }
           main { padding: 0 !important; max-width: none !important; }
-          .print-area { border: none !important; width: 100% !important; overflow: visible !important; }
+          .print-area { width: 100% !important; overflow: visible !important; }
           .print-area, .print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .print-area table { width: 100% !important; font-size: 7px !important; }
           .print-area th, .print-area td { padding: 0 1px !important; line-height: 1.1 !important; }
@@ -122,7 +122,8 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
           .print-area .form-title { font-size: 14px !important; }
           .print-area .logo-box { width: 140px !important; }
           .print-area .logo-box img { height: 30px !important; }
-          .print-area .sign-area { padding: 8px 24px !important; font-size: 9px !important; gap: 6px 32px !important; }
+          .print-area .sign-area { font-size: 9px !important; }
+          .print-area .sign-area > div { padding: 6px 20px !important; }
           @page { size: A4 portrait; margin: 7mm; }
         }
       `}</style>
@@ -238,11 +239,15 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
             </table>
 
             {/* signatures */}
-            <div className="sign-area grid grid-cols-2 gap-x-12 gap-y-8 border-t-2 border-slate-900 px-8 py-6 text-xs">
-              <Sign role="ผู้ขออนุมัติ" title="ผู้จัดการส่วนโลจิสติกส์การขาย" />
-              <Sign role="ผู้อนุมัติร่วม" title="ผู้อำนวยการฝ่ายพัฒนาธุรกิจ" />
-              <Sign role="ผู้อนุมัติร่วม" title="รองผู้อำนวยการฝ่ายพัฒนาธุรกิจ" />
-              <Sign role="ผู้อนุมัติร่วม" title="ผู้อำนวยการฝ่ายปฏิบัติการ" />
+            <div className="sign-area flex border-t-2 border-slate-900 text-xs">
+              <div className="flex-1 space-y-8 border-r-2 border-slate-900 px-8 py-6">
+                <Sign role="ผู้ขออนุมัติ" title="ผู้จัดการส่วนโลจิสติกส์การขาย" />
+                <Sign role="ผู้อนุมัติร่วม" title="รองผู้อำนวยการฝ่ายพัฒนาธุรกิจ" noDate />
+              </div>
+              <div className="flex-1 space-y-8 px-8 py-6">
+                <Sign role="ผู้อนุมัติร่วม" title="ผู้อำนวยการฝ่ายพัฒนาธุรกิจ" />
+                <Sign role="ผู้อนุมัติร่วม" title="ผู้อำนวยการฝ่ายปฏิบัติการ" />
+              </div>
             </div>
           </div>
         </div>
@@ -305,7 +310,7 @@ function BlockRows({ b, editCell, editMeta }: {
   );
 }
 
-function Sign({ role, title }: { role: string; title: string }) {
+function Sign({ role, title, noDate }: { role: string; title: string; noDate?: boolean }) {
   return (
     <div>
       <div className="flex items-end gap-2">
@@ -317,10 +322,12 @@ function Sign({ role, title }: { role: string; title: string }) {
         <span className="whitespace-nowrap">ตำแหน่ง :</span>
         <span className="flex-1 border-b border-slate-500 text-center">{title}</span>
       </div>
-      <div className="mt-2 flex items-end gap-2">
-        <span className="whitespace-nowrap">วันที่ :</span>
-        <span className="flex-1 border-b border-dotted border-slate-500">&nbsp;</span>
-      </div>
+      {!noDate && (
+        <div className="mt-2 flex items-end gap-2">
+          <span className="whitespace-nowrap">วันที่ :</span>
+          <span className="flex-1 border-b border-dotted border-slate-500">&nbsp;</span>
+        </div>
+      )}
     </div>
   );
 }
