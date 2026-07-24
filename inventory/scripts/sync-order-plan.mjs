@@ -1,7 +1,7 @@
 // =====================================================================
 // sync-order-plan.mjs — ซิงก์ "แผนสั่งสต๊อกระดับรหัส" (แบบฟอร์มขออนุมัติ)
 //   อ่านเฉพาะแถวหัวรหัสในหน้า "สั่งสต๊อก …" (Rev.00) ผ่าน gviz CSV
-//   คอลัมน์ (0-based): 0=รหัส 1=ชื่อ 2=เป้าหมายยอดขายต่อปี 4=เกรด
+//   คอลัมน์ (0-based): 0=รหัส 1=ชื่อ 16=เป้าหมายยอดขายต่อปี 4=เกรด
 //     8=WIP 9=สต็อกปัจจุบัน 10=จำนวนที่ต้องการสั่งเพิ่ม(จุดสั่งซื้อ)
 //   สต็อกปัจจุบัน+WIP = 8+9 · จำนวนสั่ง = ปัดจุดสั่งซื้อเป็นเต็มสิบ (≥0)
 //   รัน: node scripts/sync-order-plan.mjs
@@ -51,7 +51,7 @@ function extract(rows, category) {
     const cur = toNum(rows[r][9]) ?? 0, wip = toNum(rows[r][8]) ?? 0, rp = toNum(rows[r][10]) ?? 0;
     out.push({
       category, code, name: (rows[r][1] || "").trim() || null, grade: (rows[r][4] || "").trim() || null,
-      annual_target: toNum(rows[r][2]), current_stock: cur, wip, stock_wip: cur + wip,
+      annual_target: toNum(rows[r][16]), current_stock: cur, wip, stock_wip: cur + wip,
       reorder_point: rp, order_qty: rp > 0 ? roundTo10(rp) : 0,
     });
   }
