@@ -207,8 +207,8 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
 
             <table className="w-full table-fixed border-collapse text-center text-[10px] leading-tight">
               <colgroup>
-                <col style={{ width: "14%" }} />
-                {ALL_KEYS.map((k) => <col key={k} style={{ width: "4.15%" }} />)}
+                <col style={{ width: "19%" }} />
+                {ALL_KEYS.map((k) => <col key={k} style={{ width: "3.95%" }} />)}
                 <col style={{ width: "6%" }} />
               </colgroup>
               <thead>
@@ -266,7 +266,7 @@ function BlockRows({ b, editCell, editMeta }: {
     <>
       {/* code header row */}
       <tr style={{ background: "#dce6f1" }}>
-        <td className="border border-slate-500 px-2 py-1 text-left font-medium">รหัสสินค้า</td>
+        <td className="h-5 whitespace-nowrap border border-slate-500 px-2 py-0.5 text-left font-medium">รหัสสินค้า</td>
         <td colSpan={4} className="border border-slate-500 px-1 text-center" style={YEL}>
           <input value={b.code} readOnly className="w-full bg-transparent text-center font-mono font-bold outline-none" />
         </td>
@@ -274,7 +274,7 @@ function BlockRows({ b, editCell, editMeta }: {
         <td colSpan={2} className="border border-slate-500 px-1" style={YEL}>
           <input value={b.grade} onChange={(e) => editMeta(b.code, "grade", e.target.value)} className="w-full bg-transparent text-center font-bold outline-none" />
         </td>
-        <td colSpan={3} className="border border-slate-500 px-1 text-right font-medium">เป้าหมายยอดขายต่อปี</td>
+        <td colSpan={3} className="whitespace-nowrap border border-slate-500 px-1 text-right font-medium">เป้าหมายยอดขายต่อปี</td>
         <td colSpan={2} className="border border-slate-500 px-1" style={YEL}>
           <input value={b.target} onChange={(e) => editMeta(b.code, "target", e.target.value)} className="w-full bg-transparent text-center font-bold outline-none" />
         </td>
@@ -286,7 +286,7 @@ function BlockRows({ b, editCell, editMeta }: {
       {/* metric rows */}
       {METRICS.map((m) => (
         <tr key={m.label} style={m.red ? { background: "#e6f0f7" } : undefined}>
-          <td className={"border border-slate-500 px-2 py-0.5 text-left " + (m.bold ? "font-bold" : "")}>{m.label}</td>
+          <td className={"h-5 whitespace-nowrap border border-slate-500 px-2 py-0.5 text-left " + (m.bold ? "font-bold" : "")}>{m.label}</td>
           {ALL_KEYS.map((key) => {
             const c = b.cells[key];
             const has = !!c;
