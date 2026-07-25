@@ -116,14 +116,14 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
           main { padding: 0 !important; max-width: none !important; }
           .print-area { width: 100% !important; overflow: visible !important; }
           .print-area, .print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .print-area table { width: 100% !important; font-size: 16px !important; }
+          .print-area table { width: 100% !important; font-size: 10px !important; }
           .print-area th, .print-area td { padding: 0 1px !important; line-height: 1.1 !important; }
-          .print-area input, .print-area span { font-size: 16px !important; }
+          .print-area input, .print-area span { font-size: 10px !important; }
           .print-area .form-title { font-size: 20px !important; }
           .print-area .logo-box { width: 19% !important; }
-          .print-area .logo-box img { height: 40px !important; }
-          .print-area .sign-area { font-size: 16px !important; }
-          .print-area .sign-area span { font-size: 16px !important; }
+          .print-area .logo-box img { height: 36px !important; }
+          .print-area .sign-area { font-size: 12px !important; }
+          .print-area .sign-area span { font-size: 12px !important; }
           .print-area .sign-area > div { padding: 6px 20px !important; }
           @page { size: A4 portrait; margin: 7mm; }
         }
@@ -206,7 +206,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
               </div>
             </div>
 
-            <table className="w-full table-fixed border-collapse text-center text-[16px] leading-tight">
+            <table className="w-full table-fixed border-collapse text-center text-[11px] leading-tight">
               <colgroup>
                 <col style={{ width: "19%" }} />
                 {ALL_KEYS.map((k) => <col key={k} style={{ width: "3.95%" }} />)}
@@ -216,14 +216,14 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
                 <tr>
                   <th rowSpan={2} className="border border-slate-500 px-1 py-1 text-center align-middle">รายละเอียดสินค้า</th>
                   {GROUPS.map((g) => (
-                    <th key={g.label} colSpan={g.sizes.length} className="h-7 border border-slate-500 px-1 py-0.5">{g.label}</th>
+                    <th key={g.label} colSpan={g.sizes.length} className="h-5 border border-slate-500 px-1 py-0.5">{g.label}</th>
                   ))}
                   <th rowSpan={2} className="whitespace-nowrap border border-slate-500 px-1 text-center align-middle">Free Size</th>
                   <th rowSpan={2} className="whitespace-nowrap border border-slate-500 px-1 text-center align-middle">รวมสุทธิ</th>
                 </tr>
                 <tr>
                   {GROUPS.flatMap((g) => g.sizes.map((s) => (
-                    <th key={`${g.gender}:${s}`} className="h-7 border border-slate-500 px-0.5 py-0.5 font-medium">{s}</th>
+                    <th key={`${g.gender}:${s}`} className="h-5 border border-slate-500 px-0.5 py-0.5 font-medium">{s}</th>
                   )))}
                 </tr>
               </thead>
@@ -240,7 +240,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
             </table>
 
             {/* signatures */}
-            <div className="sign-area flex border-t-2 border-slate-900 text-[16px]">
+            <div className="sign-area flex border-t-2 border-slate-900 text-[12px]">
               <div className="flex-1 space-y-8 border-r-2 border-slate-900 px-8 py-6">
                 <Sign role="ผู้ขออนุมัติ" title="ผู้จัดการส่วนโลจิสติกส์การขาย" />
                 <Sign role="ผู้อนุมัติร่วม" title="รองผู้อำนวยการฝ่ายพัฒนาธุรกิจ" noDate />
@@ -267,7 +267,7 @@ function BlockRows({ b, editCell, editMeta }: {
     <>
       {/* code header row */}
       <tr style={{ background: "#dce6f1" }}>
-        <td className="h-7 whitespace-nowrap border border-slate-500 px-2 py-0.5 text-left font-medium">รหัสสินค้า</td>
+        <td className="h-5 whitespace-nowrap border border-slate-500 px-2 py-0.5 text-left font-medium">รหัสสินค้า</td>
         <td colSpan={4} className="border border-slate-500 px-1 text-center" style={YEL}>
           <input value={b.code} readOnly className="w-full bg-transparent text-center font-mono font-bold outline-none" />
         </td>
@@ -279,7 +279,7 @@ function BlockRows({ b, editCell, editMeta }: {
         <td colSpan={2} className="border border-slate-500 px-1" style={YEL}>
           <input value={b.target} onChange={(e) => editMeta(b.code, "target", e.target.value)} className="w-full bg-transparent text-center font-bold outline-none" />
         </td>
-        <td colSpan={8} className="border border-slate-500 px-2 text-left text-[16px] font-semibold text-blue-700">
+        <td colSpan={8} className="border border-slate-500 px-2 text-left text-[11px] font-semibold text-blue-700">
           <input value={b.note} onChange={(e) => editMeta(b.code, "note", e.target.value)} className="w-full bg-transparent outline-none" />
         </td>
       </tr>
@@ -287,7 +287,7 @@ function BlockRows({ b, editCell, editMeta }: {
       {/* metric rows */}
       {METRICS.map((m) => (
         <tr key={m.label} style={m.red ? { background: "#e6f0f7" } : undefined}>
-          <td className={"h-7 whitespace-nowrap border border-slate-500 px-2 py-0.5 text-left " + (m.bold ? "font-bold" : "")}>{m.label}</td>
+          <td className={"h-5 whitespace-nowrap border border-slate-500 px-2 py-0.5 text-left " + (m.bold ? "font-bold" : "")}>{m.label}</td>
           {ALL_KEYS.map((key) => {
             const c = b.cells[key];
             const has = !!c;
