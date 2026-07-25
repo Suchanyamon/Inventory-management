@@ -215,14 +215,14 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
                 <tr>
                   <th rowSpan={2} className="border border-slate-500 px-1 py-1 text-left align-bottom">รายละเอียดสินค้า</th>
                   {GROUPS.map((g) => (
-                    <th key={g.label} colSpan={g.sizes.length} className="border border-slate-500 px-1 py-0.5">{g.label}</th>
+                    <th key={g.label} colSpan={g.sizes.length} className="h-5 border border-slate-500 px-1 py-0.5">{g.label}</th>
                   ))}
                   <th rowSpan={2} className="border border-slate-500 px-0.5 align-bottom leading-none">Free<br />Size</th>
                   <th rowSpan={2} className="border border-slate-500 px-0.5 align-bottom leading-none">รวม<br />สุทธิ</th>
                 </tr>
                 <tr>
                   {GROUPS.flatMap((g) => g.sizes.map((s) => (
-                    <th key={`${g.gender}:${s}`} className="border border-slate-500 px-0.5 py-0.5 font-medium">{s}</th>
+                    <th key={`${g.gender}:${s}`} className="h-5 border border-slate-500 px-0.5 py-0.5 font-medium">{s}</th>
                   )))}
                 </tr>
               </thead>
