@@ -275,11 +275,11 @@ function BlockRows({ b, editCell, editMeta }: {
         <td colSpan={2} className="border border-slate-500 px-1" style={YEL}>
           <input value={b.grade} onChange={(e) => editMeta(b.code, "grade", e.target.value)} className="w-full bg-transparent text-center font-bold outline-none" />
         </td>
-        <td colSpan={3} className="whitespace-nowrap border border-slate-500 px-1 text-right font-medium">เป้าหมายยอดขายต่อปี</td>
-        <td colSpan={2} className="border border-slate-500 px-1" style={YEL}>
+        <td colSpan={4} className="whitespace-nowrap border border-slate-500 pr-2 text-right font-medium">เป้าหมายยอดขายต่อปี</td>
+        <td colSpan={3} className="border border-slate-500 px-1" style={YEL}>
           <input value={b.target} onChange={(e) => editMeta(b.code, "target", e.target.value)} className="w-full bg-transparent text-center font-bold outline-none" />
         </td>
-        <td colSpan={8} className="border border-slate-500 px-2 text-left text-[11px] font-semibold text-blue-700">
+        <td colSpan={6} className="border border-slate-500 px-2 text-left text-[11px] font-semibold text-blue-700">
           <input value={b.note} onChange={(e) => editMeta(b.code, "note", e.target.value)} className="w-full bg-transparent outline-none" />
         </td>
       </tr>
