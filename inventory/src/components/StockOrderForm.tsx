@@ -243,7 +243,7 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
             <div className="sign-area flex border-t-2 border-slate-900 text-[12px]">
               <div className="flex-1 space-y-8 border-r-2 border-slate-900 px-8 py-6">
                 <Sign role="ผู้ขออนุมัติ" title="ผู้จัดการส่วนโลจิสติกส์การขาย" />
-                <Sign role="ผู้อนุมัติร่วม" title="รองผู้อำนวยการฝ่ายพัฒนาธุรกิจ" noDate />
+                <Sign role="ผู้อนุมัติร่วม" title="รองผู้อำนวยการฝ่ายพัฒนาธุรกิจ" />
               </div>
               <div className="flex-1 space-y-8 px-8 py-6">
                 <Sign role="ผู้อนุมัติร่วม" title="ผู้อำนวยการฝ่ายพัฒนาธุรกิจ" />
