@@ -116,9 +116,9 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
           main { padding: 0 !important; max-width: none !important; }
           .print-area { width: 100% !important; overflow: visible !important; }
           .print-area, .print-area * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .print-area table { width: 100% !important; font-size: 10px !important; }
-          .print-area th, .print-area td { padding: 0 1px !important; line-height: 1.1 !important; }
-          .print-area input, .print-area span { font-size: 10px !important; }
+          .print-area table { width: 100% !important; font-size: 11px !important; }
+          .print-area th, .print-area td { padding: 0 1px !important; line-height: 1.15 !important; }
+          .print-area input, .print-area span { font-size: 11px !important; }
           .print-area .form-title { font-size: 20px !important; }
           .print-area .logo-box { width: 19% !important; }
           .print-area .logo-box img { height: 36px !important; }
@@ -218,8 +218,8 @@ export default function StockOrderForm({ rows, today }: { rows: SizeRow[]; today
                   {GROUPS.map((g) => (
                     <th key={g.label} colSpan={g.sizes.length} className="h-5 border border-slate-500 px-1 py-0.5">{g.label}</th>
                   ))}
-                  <th rowSpan={2} className="whitespace-nowrap border border-slate-500 px-1 text-center align-middle">Free Size</th>
-                  <th rowSpan={2} className="whitespace-nowrap border border-slate-500 px-1 text-center align-middle">รวมสุทธิ</th>
+                  <th rowSpan={2} className="border border-slate-500 px-1 text-center align-middle">Free Size</th>
+                  <th rowSpan={2} className="border border-slate-500 px-1 text-center align-middle">รวมสุทธิ</th>
                 </tr>
                 <tr>
                   {GROUPS.flatMap((g) => g.sizes.map((s) => (
