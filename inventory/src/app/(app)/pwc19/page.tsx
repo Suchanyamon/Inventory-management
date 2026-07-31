@@ -52,7 +52,8 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
   const maxVal = Math.max(1, ...(valByWh || []).map((w) => Number(w.total_value_fifo || 0)));
   const statusMap = Object.fromEntries((statusSum || []).map((s) => [s.stock_status, s]));
   const catMax = Math.max(1, ...(byCat || []).map((c) => Number(c.total_value_fifo || 0)));
-  const zoneMax = Math.max(1, ...(zones || []).map((z) => Number(z.slots || 0)));
+  const sortedZones = [...(zones || [])].sort((a, b) => String(a.zone || "").localeCompare(String(b.zone || ""), "en", { numeric: true }));
+  const zoneMax = Math.max(1, ...sortedZones.map((z) => Number(z.slots || 0)));
   const deadTotal = (dead || []).reduce((s, d) => s + Number(d.tied_value || 0), 0);
   const totalPages = Math.max(1, Math.ceil((stockCount || 0) / PAGE));
   const qs = (extra: Record<string, string | number>) => "?" + new URLSearchParams({ ...(model ? { model } : {}), ...(q ? { q } : {}), ...extra } as any).toString();
@@ -143,11 +144,11 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
       <div className="card p-4">
         <h2 className="mb-1 font-semibold">🗺️ การใช้พื้นที่ตามโซนเก็บ (PWC19)</h2>
         <p className="mb-3 text-xs text-slate-400">
-          <Link href="/pwc19?zone=all#zone-products" className="font-medium text-brand hover:underline">ทั้งหมด {num((zones || []).length)} โซน</Link>
+          <Link href="/pwc19?zone=all#zone-products" className="font-medium text-brand hover:underline">ทั้งหมด {num(sortedZones.length)} โซน</Link>
           <span> · กดโซนเพื่อดูรหัสสินค้าที่จัดเก็บในโซนนั้น · ตัวเลข = จำนวนช่องเก็บที่ใช้</span>
         </p>
         <div className="flex flex-wrap gap-1.5">
-          {(zones || []).map((z) => (
+          {sortedZones.map((z) => (
             <Link key={z.zone} href={`/pwc19?zone=${encodeURIComponent(z.zone)}#zone-products`} className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:border-brand hover:bg-brand/5 ${zone === z.zone ? "border-brand bg-brand/10" : "border-slate-200"}`} title={`ดู ${z.codes} รหัสสินค้าในโซน ${z.zone}`}>
               <b>{z.zone}</b>
               <span className="inline-block rounded bg-brand/10 px-1 text-brand" style={{ opacity: 0.4 + 0.6 * (Number(z.slots) / zoneMax) }}>{num(Number(z.slots))}</span>
