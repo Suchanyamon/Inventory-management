@@ -14,10 +14,11 @@ const STATUS = {
   ok: { label: "ปกติ", cls: "text-emerald-600" },
 } as const;
 
-export default async function DashboardPWC19({ searchParams }: { searchParams: { model?: string; q?: string; p?: string } }) {
+export default async function DashboardPWC19({ searchParams }: { searchParams: { model?: string; q?: string; p?: string; zone?: string } }) {
   const supabase = createSupabaseServer();
   const model = searchParams.model || "";
   const q = (searchParams.q || "").trim();
+  const zone = (searchParams.zone || "").trim();
   const page = Math.max(1, Number(searchParams.p || 1));
 
   let stockQ = supabase
@@ -31,7 +32,7 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
   const [
     { data: valByWh }, { count: reorderCount }, { data: nearExp }, { data: models },
     { data: stock, count: stockCount }, { data: statusSum }, { data: byCat },
-    { data: abc }, { data: zones }, { data: dead, count: deadCount },
+    { data: abc }, { data: zones }, { data: dead, count: deadCount }, { data: storageLocations },
   ] = await Promise.all([
     supabase.from("v_valuation_by_warehouse").select("*"),
     supabase.from("v_reorder_list").select("*", { count: "exact", head: true }),
@@ -43,6 +44,7 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
     supabase.from("v_abc_summary").select("*"),
     supabase.from("v_zone_usage").select("*"),
     supabase.from("v_dead_stock").select("sku,name,model,storage_location,on_hand,tied_value", { count: "exact" }).order("tied_value", { ascending: false }).limit(20),
+    supabase.from("storage_location").select("code,locations").order("code"),
   ]);
 
   const totalValue = (valByWh || []).reduce((s, w) => s + Number(w.total_value_fifo || 0), 0);
@@ -54,6 +56,14 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
   const deadTotal = (dead || []).reduce((s, d) => s + Number(d.tied_value || 0), 0);
   const totalPages = Math.max(1, Math.ceil((stockCount || 0) / PAGE));
   const qs = (extra: Record<string, string | number>) => "?" + new URLSearchParams({ ...(model ? { model } : {}), ...(q ? { q } : {}), ...extra } as any).toString();
+  const selectedZoneRows = (storageLocations || []).flatMap((row) =>
+    row.locations.split(",").map((location: string) => location.trim()).filter(Boolean).flatMap((location: string) => {
+      const rowZone = location.split(/\s+/)[0];
+      if (zone && zone !== "all" && rowZone !== zone) return [];
+      return [{ code: row.code, location, zone: rowZone }];
+    }),
+  );
+  const zoneTitle = zone === "all" ? "ทั้งหมด" : zone;
 
   return (
     <div className="space-y-6 pb-16">
@@ -132,15 +142,37 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
       {/* 🗺️ การใช้พื้นที่ตามโซนเก็บ */}
       <div className="card p-4">
         <h2 className="mb-1 font-semibold">🗺️ การใช้พื้นที่ตามโซนเก็บ (PWC19)</h2>
-        <p className="mb-3 text-xs text-slate-400">{num((zones || []).length)} โซน · ตัวเลข = จำนวนช่องเก็บที่ใช้</p>
+        <p className="mb-3 text-xs text-slate-400">
+          <Link href="/pwc19?zone=all#zone-products" className="font-medium text-brand hover:underline">ทั้งหมด {num((zones || []).length)} โซน</Link>
+          <span> · กดโซนเพื่อดูรหัสสินค้าที่จัดเก็บในโซนนั้น · ตัวเลข = จำนวนช่องเก็บที่ใช้</span>
+        </p>
         <div className="flex flex-wrap gap-1.5">
           {(zones || []).map((z) => (
-            <span key={z.zone} className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs" title={`${z.codes} รหัสสินค้า`}>
+            <Link key={z.zone} href={`/pwc19?zone=${encodeURIComponent(z.zone)}#zone-products`} className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:border-brand hover:bg-brand/5 ${zone === z.zone ? "border-brand bg-brand/10" : "border-slate-200"}`} title={`ดู ${z.codes} รหัสสินค้าในโซน ${z.zone}`}>
               <b>{z.zone}</b>
               <span className="inline-block rounded bg-brand/10 px-1 text-brand" style={{ opacity: 0.4 + 0.6 * (Number(z.slots) / zoneMax) }}>{num(Number(z.slots))}</span>
-            </span>
+            </Link>
           ))}
         </div>
+        {zone && (
+          <div id="zone-products" className="mt-4 rounded-lg border border-brand/20 bg-brand/5 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="font-semibold">รหัสสินค้าในโซน {zoneTitle}</h3>
+                <p className="text-xs text-slate-500">พบ {num(selectedZoneRows.length)} รหัส/ตำแหน่ง</p>
+              </div>
+              <Link href="/pwc19" className="btn-ghost text-xs">ปิดรายการ</Link>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {selectedZoneRows.map((row) => (
+                <Link key={`${row.code}-${row.location}`} href={`/products?q=${encodeURIComponent(row.code)}`} className="rounded border border-slate-200 bg-white px-2 py-1 font-mono text-xs text-brand hover:border-brand hover:underline">
+                  {row.code} <span className="font-sans text-slate-400">({row.location})</span>
+                </Link>
+              ))}
+              {selectedZoneRows.length === 0 && <span className="text-sm text-slate-500">ไม่พบรหัสสินค้าในโซนนี้</span>}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 🔴 สต็อกค้างนาน */}
