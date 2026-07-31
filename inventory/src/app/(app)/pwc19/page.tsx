@@ -57,13 +57,15 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
   const deadTotal = (dead || []).reduce((s, d) => s + Number(d.tied_value || 0), 0);
   const totalPages = Math.max(1, Math.ceil((stockCount || 0) / PAGE));
   const qs = (extra: Record<string, string | number>) => "?" + new URLSearchParams({ ...(model ? { model } : {}), ...(q ? { q } : {}), ...extra } as any).toString();
-  const selectedZoneRows = (storageLocations || []).flatMap((row) =>
-    row.locations.split(",").map((location: string) => location.trim()).filter(Boolean).flatMap((location: string) => {
-      const rowZone = location.split(/\s+/)[0];
-      if (zone && zone !== "all" && rowZone !== zone) return [];
-      return [{ code: row.code, location, zone: rowZone }];
-    }),
-  );
+  const selectedZoneRows = (storageLocations || [])
+    .flatMap((row) =>
+      row.locations.split(",").map((location: string) => location.trim()).filter(Boolean).flatMap((location: string) => {
+        const rowZone = location.split(/\s+/)[0];
+        if (zone && zone !== "all" && rowZone !== zone) return [];
+        return [{ code: row.code, location, zone: rowZone }];
+      }),
+    )
+    .sort((a, b) => a.location.localeCompare(b.location, "en", { numeric: true }) || a.code.localeCompare(b.code, "en", { numeric: true }));
   const zoneTitle = zone === "all" ? "ทั้งหมด" : zone;
 
   return (
