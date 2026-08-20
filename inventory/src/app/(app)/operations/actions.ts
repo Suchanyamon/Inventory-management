@@ -13,7 +13,7 @@ async function guardWrite(): Promise<string | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return "กรุณาเข้าสู่ระบบ";
-  const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const { data } = await supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle();
   if (!data || (data.role !== "admin" && data.role !== "staff")) return "ไม่มีสิทธิ์ทำรายการ (ต้องเป็น staff/admin)";
   return null;
 }
