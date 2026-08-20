@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   description: "Wholesale Inventory Management — DCMT / DCMTA",
 };
 
-// ตั้งธีมก่อน paint (กันจอกระพริบ) — จาก localStorage หรือค่าระบบ
-const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`;
+// ตั้งธีมก่อน paint (กันจอกระพริบ) — ค่าเริ่มต้นเป็นโหมดสว่างตาม CI แดงเลือดนก-ขาว
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

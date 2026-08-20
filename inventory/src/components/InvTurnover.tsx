@@ -16,7 +16,7 @@ const SHEETS: [string, string][] = [
   ["F", "Over F"],
 ];
 const BIZ_ORDER = ["Uniform", "Merchandise", "Fashion", "YTD"];
-const RATIO = "#0ea5e9";
+const RATIO = "#8A1538";
 const DSI = "#f97316";
 const GUTTER = 56;
 const PLOT_H = 130;
