@@ -32,15 +32,15 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: fullName || email },
+      user_metadata: { display_name: fullName || email },
     });
     if (error) return { ok: false, message: error.message };
 
     // trigger fn_handle_new_user จะสร้าง profile ให้ — อัปเดต role/ชื่อ ตามที่เลือก
     const { error: upErr } = await admin
       .from("profiles")
-      .update({ full_name: fullName || email, role, is_active: true })
-      .eq("id", data.user!.id);
+      .update({ display_name: fullName || email, role, is_active: true })
+      .eq("user_id", data.user!.id);
     if (upErr) return { ok: false, message: "สร้างบัญชีแล้ว แต่ตั้งบทบาทไม่สำเร็จ: " + upErr.message };
 
     revalidatePath("/settings");
@@ -57,7 +57,7 @@ export async function setRole(formData: FormData): Promise<void> {
   const role = String(formData.get("role") || "") as Role;
   if (!id || !ROLES.includes(role)) return;
   const admin = createSupabaseAdmin();
-  await admin.from("profiles").update({ role }).eq("id", id);
+  await admin.from("profiles").update({ role }).eq("user_id", id);
   revalidatePath("/settings");
 }
 
@@ -66,10 +66,10 @@ export async function toggleActive(formData: FormData): Promise<void> {
   const me = await requireAdmin();
   const id = String(formData.get("id") || "");
   const active = String(formData.get("active") || "") === "true"; // สถานะปัจจุบัน → จะสลับ
-  if (!id || id === me.id) return; // กันปิดบัญชีตัวเอง
+  if (!id || id === me.user_id) return; // กันปิดบัญชีตัวเอง
   const admin = createSupabaseAdmin();
   const next = !active;
-  await admin.from("profiles").update({ is_active: next }).eq("id", id);
+  await admin.from("profiles").update({ is_active: next }).eq("user_id", id);
   await admin.auth.admin.updateUserById(id, { ban_duration: next ? "none" : "876000h" });
   revalidatePath("/settings");
 }

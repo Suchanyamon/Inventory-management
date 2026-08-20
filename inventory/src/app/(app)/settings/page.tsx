@@ -14,8 +14,8 @@ const ROLE_BADGE: Record<string, string> = {
 };
 
 interface Row {
-  id: string;
-  full_name: string | null;
+  user_id: string;
+  display_name: string | null;
   role: string;
   is_active: boolean;
   email: string;
@@ -28,11 +28,11 @@ export default async function SettingsPage() {
 
   const admin = createSupabaseAdmin();
   const [{ data: profiles }, { data: authList }] = await Promise.all([
-    admin.from("profiles").select("id, full_name, role, is_active, created_at").order("created_at", { ascending: true }),
+    admin.from("profiles").select("user_id, display_name, role, is_active, created_at").order("created_at", { ascending: true }),
     admin.auth.admin.listUsers({ perPage: 1000 }),
   ]);
   const emailById = new Map((authList?.users || []).map((u) => [u.id, u.email || ""]));
-  const rows: Row[] = ((profiles as any[]) || []).map((p) => ({ ...p, email: emailById.get(p.id) || "—" }));
+  const rows: Row[] = ((profiles as any[]) || []).map((p) => ({ ...p, email: emailById.get(p.user_id) || "—" }));
 
   return (
     <div className="space-y-6 pb-16">
@@ -66,11 +66,11 @@ export default async function SettingsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {rows.map((u) => {
-                const isSelf = u.id === profile.id;
+                const isSelf = u.user_id === profile.user_id;
                 return (
-                  <tr key={u.id}>
+                  <tr key={u.user_id}>
                     <td className="px-4 py-3">
-                      <div className="font-medium">{u.full_name || "—"}</div>
+                      <div className="font-medium">{u.display_name || "—"}</div>
                       <div className="text-xs text-slate-400">{u.email}</div>
                     </td>
                     <td className="px-4 py-3">
@@ -80,7 +80,7 @@ export default async function SettingsPage() {
                         </span>
                       ) : (
                         <form action={setRole} className="flex items-center gap-1.5">
-                          <input type="hidden" name="id" value={u.id} />
+                          <input type="hidden" name="id" value={u.user_id} />
                           <select name="role" defaultValue={u.role} className="input !py-1 text-xs">
                             <option value="admin">admin</option>
                             <option value="staff">staff</option>
@@ -102,7 +102,7 @@ export default async function SettingsPage() {
                     <td className="px-4 py-3 text-right">
                       {!isSelf && (
                         <form action={toggleActive} className="inline">
-                          <input type="hidden" name="id" value={u.id} />
+                          <input type="hidden" name="id" value={u.user_id} />
                           <input type="hidden" name="active" value={String(u.is_active)} />
                           <button type="submit" className="btn-ghost !py-1 text-xs">
                             {u.is_active ? "ปิดใช้งาน" : "เปิดใช้งาน"}

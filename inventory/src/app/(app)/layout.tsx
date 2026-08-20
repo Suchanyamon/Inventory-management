@@ -31,7 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </nav>
         <div className="mt-4 space-y-2 border-t border-slate-200 pt-3">
           <div className="px-2 text-xs">
-            <div className="truncate font-medium text-slate-700">{profile?.full_name || email}</div>
+            <div className="truncate font-medium text-slate-700">{profile?.display_name || email}</div>
             <div className="text-slate-400">{ROLE_LABEL[profile?.role || "viewer"]}</div>
           </div>
           <ThemeToggle className="w-full" />
