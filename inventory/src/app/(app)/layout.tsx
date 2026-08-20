@@ -5,6 +5,8 @@ import { signOut } from "@/app/login/actions";
 
 const ROLE_LABEL: Record<string, string> = { admin: "ผู้ดูแลระบบ", staff: "พนักงานคลัง", viewer: "ดูอย่างเดียว" };
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { email, profile } = await getSessionProfile();
   return (

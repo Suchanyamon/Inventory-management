@@ -14,11 +14,17 @@ export async function getSessionProfile(): Promise<{ email: string | null; profi
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { email: null, profile: null };
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("user_id, display_name, role")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
+  if (profileError) {
+    console.error("Failed to load session profile", {
+      code: profileError.code,
+      message: profileError.message,
+    });
+  }
   return { email: user.email ?? null, profile: (profile as Profile) ?? null };
 }
 
