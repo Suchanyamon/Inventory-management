@@ -15,8 +15,8 @@
   --text: #2a1018;
   --muted: #755260;
   --faint: #a47a88;
-  --brand: #8A1538;
-  --brand-fg: #5A0A1D;
+  --brand: #780808;
+  --brand-fg: #4A0505;
 }
 .dark {
   color-scheme: dark;
@@ -28,8 +28,8 @@
   --text: #fff7f8;
   --muted: #d8aebc;
   --faint: #a87889;
-  --brand: #D11F4C;
-  --brand-fg: #FDE8EE;
+  --brand: #780808;
+  --brand-fg: #FFE8E8;
 }
 
 html, body {

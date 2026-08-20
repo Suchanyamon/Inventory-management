@@ -15,7 +15,7 @@ export interface FlowRow {
 const BIZ_ORDER = ["Uniform", "Merchandise", "Fashion", "Other"];
 const IN = "var(--brand)";
 const OUT = "#f97316";
-const INV = "#8A1538";
+const INV = "#780808";
 const GUTTER = 52;
 const PLOT_H = 150;
 
