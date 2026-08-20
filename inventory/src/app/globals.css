@@ -17,19 +17,25 @@
   --faint: #a47a88;
   --brand: #780808;
   --brand-fg: #4A0505;
+  --chart-input: #16A34A;
+  --chart-output: #B7791F;
+  --chart-inventory: #780808;
 }
 .dark {
   color-scheme: dark;
-  --bg: #000000;
-  --surface: #11070b;
-  --surface-2: #1d0c12;
-  --border: #3a1a25;
-  --border-2: #2b1119;
-  --text: #fff7f8;
-  --muted: #d8aebc;
-  --faint: #a87889;
+  --bg: #0B0505;
+  --surface: #160B0B;
+  --surface-2: #211010;
+  --border: #3A2020;
+  --border-2: #2B1717;
+  --text: #FFF8F8;
+  --muted: #E7CACA;
+  --faint: #C9A4A4;
   --brand: #780808;
   --brand-fg: #FFE8E8;
+  --chart-input: #4ADE80;
+  --chart-output: #F5C542;
+  --chart-inventory: #FF8A8A;
 }
 
 html, body {
@@ -96,8 +102,8 @@ html, body {
 .dark .text-slate-700 { color: #e4e4e7; }
 .dark .text-slate-600 { color: #d4d4d8; }
 .dark .text-slate-500 { color: var(--muted); }
-.dark .text-slate-400 { color: #8b8b93; }
-.dark .text-slate-300 { color: var(--faint); }
+.dark .text-slate-400 { color: #C9A4A4; }
+.dark .text-slate-300 { color: #E7CACA; }
 
 .dark .border-slate-100 { border-color: var(--border-2); }
 .dark .border-slate-200 { border-color: var(--border); }
@@ -107,7 +113,7 @@ html, body {
 .dark .hover\:bg-slate-50:hover { background-color: var(--surface-2); }
 .dark .hover\:bg-slate-100:hover { background-color: var(--border-2); }
 
-.dark .text-brand { color: var(--brand); }
+.dark .text-brand { color: #FFB4B4; }
 .dark .text-emerald-600 { color: #34d399; }
 .dark .text-red-600 { color: #f87171; }
 .dark .text-orange-600 { color: #fb9a4b; }

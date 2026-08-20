@@ -13,9 +13,9 @@ export interface FlowRow {
 }
 
 const BIZ_ORDER = ["Uniform", "Merchandise", "Fashion", "Other"];
-const IN = "var(--brand)";
-const OUT = "#f97316";
-const INV = "#780808";
+const IN = "var(--chart-input)";
+const OUT = "var(--chart-output)";
+const INV = "var(--chart-inventory)";
 const GUTTER = 52;
 const PLOT_H = 150;
 
@@ -132,7 +132,7 @@ export default function MonthlyFlow({ rows, variant = "full" }: { rows: FlowRow[
 
           {/* ===== กราฟล่าง: Input (บวก) vs Output (ลบ) แบบ diverging ===== */}
           <div className="mb-1 mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <span className="flex items-center gap-1.5"><Dot color={IN} /> Input <b className="text-brand">{baht(totalIn)}</b></span>
+            <span className="flex items-center gap-1.5"><Dot color={IN} /> Input <b style={{ color: IN }}>{baht(totalIn)}</b></span>
             <span className="flex items-center gap-1.5"><Dot color={OUT} /> Output <b style={{ color: OUT }}>{baht(totalOut)}</b></span>
             <span className="text-slate-500">สุทธิ <b className={totalIn + totalOut >= 0 ? "text-emerald-600" : "text-red-600"}>{baht(totalIn + totalOut)}</b></span>
           </div>
@@ -154,7 +154,7 @@ export default function MonthlyFlow({ rows, variant = "full" }: { rows: FlowRow[
                   return (
                     <div key={mo} className="relative flex-1">
                       <div className="absolute rounded-t" style={{ left: "14%", width: "32%", bottom: PLOT_H - zeroY, height: Math.max(inH, d.input > 0 ? 2 : 0), background: IN }} title={`${mo} Input ${baht(d.input)}`}>
-                        {d.input > 0 && <span className="absolute bottom-full left-1/2 mb-0.5 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium text-brand">{lab2(d.input)}</span>}
+                        {d.input > 0 && <span className="absolute bottom-full left-1/2 mb-0.5 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium" style={{ color: IN }}>{lab2(d.input)}</span>}
                       </div>
                       <div className="absolute rounded-b" style={{ left: "54%", width: "32%", top: zeroY, height: Math.max(outH, d.output < 0 ? 2 : 0), background: OUT }} title={`${mo} Output ${baht(d.output)}`}>
                         {d.output < 0 && <span className="absolute top-full left-1/2 mt-0.5 -translate-x-1/2 whitespace-nowrap text-[9px] font-medium" style={{ color: OUT }}>{lab2(d.output)}</span>}
@@ -197,7 +197,7 @@ export default function MonthlyFlow({ rows, variant = "full" }: { rows: FlowRow[
                 {byCat.slice(0, 40).map((c) => (
                   <tr key={c.category} className="hover:bg-slate-50">
                     <td className="td">{c.category}</td>
-                    <td className="td text-right text-brand">{baht(c.input)}</td>
+                    <td className="td text-right" style={{ color: IN }}>{baht(c.input)}</td>
                     <td className="td text-right" style={{ color: OUT }}>{baht(c.output)}</td>
                     <td className="td text-right" style={{ color: INV }}>{baht(c.inv)}</td>
                     <td className={"td text-right " + (c.input + c.output >= 0 ? "text-emerald-600" : "text-red-600")}>{baht(c.input + c.output)}</td>
