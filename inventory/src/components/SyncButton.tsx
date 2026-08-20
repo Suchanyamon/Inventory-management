@@ -1,9 +1,11 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface Res { source: string; ok: boolean; count?: number; error?: string; }
 
 export default function SyncButton() {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<Res[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -14,7 +16,10 @@ export default function SyncButton() {
       const r = await fetch("/api/sync", { method: "POST" });
       const j = await r.json();
       if (!r.ok) setErr(j.error || "sync ล้มเหลว");
-      else setResults(j.results);
+      else {
+        setResults(j.results);
+        router.refresh();
+      }
     } catch (e) {
       setErr("เชื่อมต่อไม่ได้ (อาจใช้เวลานานเกินกำหนด)");
     } finally {
