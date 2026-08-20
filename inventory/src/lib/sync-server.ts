@@ -232,8 +232,21 @@ export async function syncExcel(): Promise<SyncResult[]> {
   return results;
 }
 
+export async function syncProductMaster(): Promise<SyncResult> {
+  try {
+    const db = admin();
+    const { error } = await db.rpc("sp_sync_product_master_from_sync_tables");
+    if (error) throw error;
+    const { count } = await db.from("products").select("id", { count: "exact", head: true });
+    return { source: "สินค้า master", ok: true, count: count ?? 0 };
+  } catch (e: any) {
+    return { source: "สินค้า master", ok: false, error: e.message };
+  }
+}
+
 export async function syncAll(): Promise<SyncResult[]> {
   const excel = await syncExcel();
   const [reorder, storage, orderPlan, orderForm] = await Promise.all([syncReorder(), syncStorage(), syncOrderPlan(), syncOrderForm()]);
-  return [...excel, reorder, storage, orderPlan, orderForm];
+  const products = await syncProductMaster();
+  return [...excel, reorder, storage, orderPlan, orderForm, products];
 }
