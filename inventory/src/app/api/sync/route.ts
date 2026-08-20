@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { syncAll } from "@/lib/sync-server";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,8 @@ export async function POST() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "กรุณาเข้าสู่ระบบ" }, { status: 401 });
 
-  const { data: profile, error: profileError } = await supabase
+  const admin = createSupabaseAdmin();
+  const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("role")
     .eq("user_id", user.id)
