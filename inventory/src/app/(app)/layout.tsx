@@ -28,7 +28,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <NavLink href="/scan" label="สแกนบาร์โค้ด" icon="📷" />
           <NavLink href="/products" label="สินค้า" icon="🏷️" />
           <NavLink href="/order" label="ขออนุมัติสั่งสต๊อก" icon="📝" />
-          <NavLink href="/reports" label="รายงานมูลค่า" icon="💰" />
           <NavLink href="/movements" label="ประวัติเคลื่อนไหว" icon="🧾" />
           {profile?.role === "admin" && <NavLink href="/settings" label="ตั้งค่า" icon="⚙️" />}
         </nav>
