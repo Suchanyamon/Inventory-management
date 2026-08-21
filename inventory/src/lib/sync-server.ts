@@ -553,3 +553,17 @@ export async function syncAll(): Promise<SyncResult[]> {
   const dataSku = await syncDataSkuPack();
   return [...excel, reorder, storage, orderPlan, orderForm, inventory, packing, products, dataSku];
 }
+
+export async function syncDashboardData(): Promise<SyncResult[]> {
+  const excel = await syncExcel();
+  const [reorder, storage, orderPlan, orderForm, inventory] = await Promise.all([
+    syncReorder(),
+    syncStorage(),
+    syncOrderPlan(),
+    syncOrderForm(),
+    syncInventorySnapshot(),
+  ]);
+  const products = await syncProductMaster();
+  const dataSku = await syncDataSkuPack();
+  return [...excel, reorder, storage, orderPlan, orderForm, inventory, products, dataSku];
+}

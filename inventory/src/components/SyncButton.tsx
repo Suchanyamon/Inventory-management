@@ -13,7 +13,7 @@ export default function SyncButton() {
   async function run() {
     setBusy(true); setErr(null); setResults(null);
     try {
-      const r = await fetch("/api/sync", { method: "POST" });
+      const r = await fetch("/api/sync?scope=dashboard", { method: "POST" });
       const j = await r.json();
       if (!r.ok) setErr(j.error || "sync ล้มเหลว");
       else {
