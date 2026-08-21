@@ -1,5 +1,7 @@
 grant select, insert, update, delete on public.product_inventory_snapshot to authenticated;
+grant select, insert, update, delete on public.product_inventory_snapshot to service_role;
 grant usage, select on sequence public.product_inventory_snapshot_id_seq to authenticated;
+grant usage, select on sequence public.product_inventory_snapshot_id_seq to service_role;
 
 drop policy if exists p_product_inventory_snapshot_insert on public.product_inventory_snapshot;
 create policy p_product_inventory_snapshot_insert
