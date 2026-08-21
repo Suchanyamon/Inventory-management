@@ -52,6 +52,13 @@ async function gviz(id: string, sheet: string): Promise<string[][]> {
   if (!res.ok || txt.startsWith("<")) throw new Error(`ดึงชีต "${sheet}" ไม่ได้ — ต้องแชร์ "ทุกคนที่มีลิงก์ = ผู้อ่าน"`);
   return parseCSV(txt);
 }
+async function googleCsvByGid(id: string, gid: string, sheetLabel: string): Promise<string[][]> {
+  const url = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${encodeURIComponent(gid)}`;
+  const res = await fetch(url, { cache: "no-store" });
+  const txt = await res.text();
+  if (!res.ok || txt.startsWith("<")) throw new Error(`ดึงชีต "${sheetLabel}" ไม่ได้ — ต้องแชร์ "ทุกคนที่มีลิงก์ = ผู้อ่าน"`);
+  return parseCSV(txt);
+}
 const toNum = (v: string) => { const s = (v || "").replace(/[, ]/g, "").replace(/[^0-9.\-]/g, ""); return s === "" || s === "-" ? null : parseFloat(s); };
 const norm = (v: string) => (v || "").trim();
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -162,6 +169,49 @@ export async function syncOrderForm(): Promise<SyncResult> {
     await replaceTable("order_form_size", out);
     return { source: "สั่งสต๊อก (รายไซส์)", ok: true, count: out.length };
   } catch (e: any) { return { source: "สั่งสต๊อก (รายไซส์)", ok: false, error: e.message }; }
+}
+
+// ---------- product_inventory_snapshot ----------
+// Source: "Rev.00 สั่งสต๊อก Product 2026 ยอดขายย้อนหลัง 2025" / tab "คงคลังสินค้า"
+// ใช้เฉพาะคลัง DCMT + DCMTA เป็นยอดคงเหลือสำหรับหน้า "สินค้า" และแดชบอร์ด PWC19
+export async function syncInventorySnapshot(): Promise<SyncResult> {
+  try {
+    const rows = await googleCsvByGid(STOCK_SHEET_ID, "977070814", "คงคลังสินค้า");
+    const header = rows[1] || [];
+    const skuIdx = header.findIndex((v) => norm(v) === "รหัสสินค้า");
+    const dcmtIdx = header.findIndex((v) => norm(v) === "DCMT");
+    const dcmtaIdx = header.findIndex((v) => norm(v) === "DCMTA");
+    const totalIdx = header.findIndex((v) => norm(v) === "รวม");
+    const gradeIdx = header.findIndex((v) => norm(v) === "เกรด");
+    const modelIdx = header.findIndex((v) => norm(v) === "รุ่นสินค้า");
+    if (skuIdx < 0 || dcmtIdx < 0 || dcmtaIdx < 0) {
+      throw new Error('หา header รหัสสินค้า / DCMT / DCMTA ในชีต "คงคลังสินค้า" ไม่พบ');
+    }
+
+    const out: any[] = [];
+    for (let r = 2; r < rows.length; r++) {
+      const row = rows[r] || [];
+      const sku = norm(row[skuIdx] || "");
+      if (!sku || sku === "รหัสสินค้า") continue;
+      const dcmt = toNum(row[dcmtIdx] || "") ?? 0;
+      const dcmta = toNum(row[dcmtaIdx] || "") ?? 0;
+      out.push({
+        sku,
+        dcmt,
+        dcmta,
+        total_dcmt_dcmta: dcmt + dcmta,
+        sheet_total: totalIdx >= 0 ? toNum(row[totalIdx] || "") : null,
+        grade: gradeIdx >= 0 ? norm(row[gradeIdx] || "") || null : null,
+        model: modelIdx >= 0 ? norm(row[modelIdx] || "") || null : null,
+        source_row: r + 1,
+      });
+    }
+
+    await replaceTable("product_inventory_snapshot", out);
+    return { source: "คงคลังสินค้า DCMT/DCMTA", ok: true, count: out.length };
+  } catch (e: any) {
+    return { source: "คงคลังสินค้า DCMT/DCMTA", ok: false, error: e.message };
+  }
 }
 
 // ---------- storage_location ----------
@@ -498,8 +548,8 @@ export async function syncDataSkuPack(): Promise<SyncResult> {
 
 export async function syncAll(): Promise<SyncResult[]> {
   const excel = await syncExcel();
-  const [reorder, storage, orderPlan, orderForm, packing] = await Promise.all([syncReorder(), syncStorage(), syncOrderPlan(), syncOrderForm(), syncPackingPerformance()]);
+  const [reorder, storage, orderPlan, orderForm, inventory, packing] = await Promise.all([syncReorder(), syncStorage(), syncOrderPlan(), syncOrderForm(), syncInventorySnapshot(), syncPackingPerformance()]);
   const products = await syncProductMaster();
   const dataSku = await syncDataSkuPack();
-  return [...excel, reorder, storage, orderPlan, orderForm, packing, products, dataSku];
+  return [...excel, reorder, storage, orderPlan, orderForm, inventory, packing, products, dataSku];
 }

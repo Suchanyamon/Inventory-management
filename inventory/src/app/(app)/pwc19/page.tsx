@@ -22,7 +22,7 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
   const page = Math.max(1, Number(searchParams.p || 1));
 
   let stockQ = supabase
-    .from("v_product_warehouse_stock")
+    .from("v_product_warehouse_stock_snapshot")
     .select("sku,name,model,size,dcmt,dcmta,total", { count: "exact" })
     .order("total", { ascending: false })
     .range((page - 1) * PAGE, page * PAGE - 1);
@@ -34,16 +34,16 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
     { data: stock, count: stockCount }, { data: statusSum }, { data: byCat },
     { data: abc }, { data: zones }, { data: dead, count: deadCount }, { data: storageLocations },
   ] = await Promise.all([
-    supabase.from("v_valuation_by_warehouse").select("*"),
+    supabase.from("v_valuation_by_warehouse_snapshot").select("*"),
     supabase.from("v_reorder_list").select("*", { count: "exact", head: true }),
     supabase.from("v_near_expiry").select("sku,name,warehouse_code,lot_no,expiry_date,days_left,qty").lte("days_left", NEAR_EXPIRY_DAYS).gte("days_left", 0).limit(6),
     supabase.from("v_models").select("model"),
     stockQ,
     supabase.from("v_stock_status_summary").select("*"),
-    supabase.from("v_valuation_by_category").select("*").limit(10),
+    supabase.from("v_valuation_by_category_snapshot").select("*").limit(10),
     supabase.from("v_abc_summary").select("*"),
     supabase.from("v_zone_usage").select("*"),
-    supabase.from("v_dead_stock").select("sku,name,model,storage_location,on_hand,tied_value", { count: "exact" }).order("tied_value", { ascending: false }).limit(20),
+    supabase.from("v_dead_stock_snapshot").select("sku,name,model,storage_location,on_hand,tied_value", { count: "exact" }).order("tied_value", { ascending: false }).limit(20),
     supabase.from("storage_location").select("code,locations").order("code"),
   ]);
 
