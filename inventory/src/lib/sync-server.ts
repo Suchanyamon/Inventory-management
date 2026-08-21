@@ -9,6 +9,7 @@ import * as XLSX from "xlsx";
 const STOCK_SHEET_ID = "1j0n4pMjUKM0eATXb-CbJvtzEF4YZSpXLww6PLUh4HGI"; // ไฟล์ "สั่งสต๊อก"
 const LAYOUT_SHEET_ID = "1EL8bhU_OrODAejHJ1-bt-MHbexV_nFTIX-ylycioexU"; // "Layout PWC19"
 const LGS_PERFORMANCE_SHEET_ID = "1FCkFfn0ef4g4AU1iQxtVjtu-aa5wuZRjvlClbhbr_xc"; // "DATA-Performance -LGS 2026"
+const DATA_SKU_SHEET_ID = "1ZEnZ6M0D7B3oDcwVyQSnr3tkjPOd5-P7EHCC9ER7QCU"; // "โครงการฯ" / tab "DATA SKU 25-06-2026"
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 export interface SyncResult { source: string; ok: boolean; count?: number; error?: string; }
@@ -52,6 +53,7 @@ async function gviz(id: string, sheet: string): Promise<string[][]> {
   return parseCSV(txt);
 }
 const toNum = (v: string) => { const s = (v || "").replace(/[, ]/g, "").replace(/[^0-9.\-]/g, ""); return s === "" || s === "-" ? null : parseFloat(s); };
+const norm = (v: string) => (v || "").trim();
 const pad2 = (n: number) => String(n).padStart(2, "0");
 function parseShipnityDate(v: string): string | null {
   const s = (v || "").trim();
@@ -388,9 +390,116 @@ export async function syncProductMaster(): Promise<SyncResult> {
   }
 }
 
+// ---------- DATA SKU 25-06-2026 ----------
+// ใช้คอลัมน์ "สูตร" + "ขนาดบรรจุ/กล่อง" เป็น master สำหรับคำนวณกล่องเต็ม/เศษ
+// อัปเดตเฉพาะ SKU ที่มีอยู่ใน public.products แล้ว เพื่อไม่ให้หน้า "สินค้า" เพิ่ม SKU หลายพันรายการโดยไม่ตั้งใจ
+type DataSkuRow = {
+  sku: string;
+  name: string | null;
+  size: string | null;
+  formula: string | null;
+  unitsPerCarton: number | null;
+  costCurrent: number | null;
+};
+type ProductSkuPackUpdate = {
+  sku: string;
+  name_th?: string | null;
+  size?: string | null;
+  sku_formula: string | null;
+  units_per_carton: number | null;
+  cost_current: number | null;
+  is_active: boolean;
+  source_updated_at: string;
+  updated_at: string;
+};
+
+function modeNumber(values: number[]): number | null {
+  const counts = new Map<number, number>();
+  for (const value of values) counts.set(value, (counts.get(value) || 0) + 1);
+  const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0]);
+  return sorted[0]?.[0] ?? null;
+}
+
+function avgNumber(values: number[]): number | null {
+  if (!values.length) return null;
+  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 100) / 100;
+}
+
+export async function syncDataSkuPack(): Promise<SyncResult> {
+  try {
+    const rows = await gviz(DATA_SKU_SHEET_ID, "DATA SKU 25-06-2026");
+    const sourceRows: DataSkuRow[] = [];
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r] || [];
+      const sku = norm(row[0] || "");
+      if (!sku) continue;
+      sourceRows.push({
+        sku,
+        name: norm(row[1] || "") || null,
+        size: norm(row[12] || "") || null,
+        formula: norm(row[24] || "") || null,
+        unitsPerCarton: toNum(row[25] || ""),
+        costCurrent: toNum(row[20] || ""),
+      });
+    }
+
+    const db = admin();
+    const { data: products, error: productsErr } = await db
+      .from("products")
+      .select("sku");
+    if (productsErr) throw productsErr;
+
+    const exact = new Map(sourceRows.map((row) => [row.sku, row]));
+    const updates = (products || []).map((product: { sku: string }): ProductSkuPackUpdate | null => {
+      const sku = norm(product.sku);
+      const exactRow = exact.get(sku);
+      if (exactRow) {
+        return {
+          sku,
+          name_th: exactRow.name,
+          size: exactRow.size,
+          sku_formula: exactRow.formula,
+          units_per_carton: exactRow.unitsPerCarton,
+          cost_current: exactRow.costCurrent,
+          is_active: true,
+          source_updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      }
+
+      const children = sourceRows.filter((row) => row.sku.startsWith(sku));
+      if (!children.length) return null;
+      const packs = children.map((row) => row.unitsPerCarton).filter((n): n is number => n != null && n > 0);
+      const costs = children.map((row) => row.costCurrent).filter((n): n is number => n != null && n > 0);
+      const formulaBase = children[0]?.formula?.split(" ")[0] || null;
+      return {
+        sku,
+        sku_formula: formulaBase,
+        units_per_carton: modeNumber(packs),
+        cost_current: avgNumber(costs),
+        is_active: true,
+        source_updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }).filter((row): row is ProductSkuPackUpdate => row != null);
+
+    for (const part of chunk(updates, 500)) {
+      const { error } = await db
+        .from("products")
+        .upsert(part, { onConflict: "sku" });
+      if (error) throw error;
+    }
+
+    return { source: "DATA SKU สูตร/บรรจุสินค้า", ok: true, count: updates.length };
+  } catch (e: any) {
+    return { source: "DATA SKU สูตร/บรรจุสินค้า", ok: false, error: e.message };
+  }
+}
+
 export async function syncAll(): Promise<SyncResult[]> {
   const excel = await syncExcel();
   const [reorder, storage, orderPlan, orderForm, packing] = await Promise.all([syncReorder(), syncStorage(), syncOrderPlan(), syncOrderForm(), syncPackingPerformance()]);
   const products = await syncProductMaster();
-  return [...excel, reorder, storage, orderPlan, orderForm, packing, products];
+  const dataSku = await syncDataSkuPack();
+  return [...excel, reorder, storage, orderPlan, orderForm, packing, products, dataSku];
 }
