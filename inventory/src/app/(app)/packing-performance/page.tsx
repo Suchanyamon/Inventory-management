@@ -24,6 +24,14 @@ type StatusRow = {
   items_qty: number;
 };
 
+type SummaryGroup = {
+  group: string;
+  orders: number;
+  items: number;
+  wrong?: number;
+  lines?: number;
+};
+
 const groupColors = [
   "bg-emerald-100 text-emerald-700 border-emerald-200",
   "bg-amber-100 text-amber-700 border-amber-200",
@@ -83,7 +91,7 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
   const dayWeight = data.reduce((s, r) => s + (r.avg_close_days == null ? 0 : Number(r.lines_count || 0)), 0);
   const avgDays = dayWeight ? weightedDays / dayWeight : null;
 
-  const byGroup = groupList
+  const byGroup: SummaryGroup[] = groupList
     .map((g) => {
       const rs = data.filter((r) => r.packing_group === g);
       return {
@@ -95,6 +103,19 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
     })
     .filter((r) => r.orders || r.items || r.wrong)
     .sort((a, b) => b.items - a.items);
+  const unclosedByGroup: SummaryGroup[] = groupList
+    .map((g) => {
+      const rs = statusRaw.filter((r) => r.packing_group === g && r.completion_status === "ยังไม่ระบุวันปิดงาน");
+      return {
+        group: g,
+        orders: rs.reduce((s, r) => s + Number(r.orders_count || 0), 0),
+        items: rs.reduce((s, r) => s + Number(r.items_qty || 0), 0),
+        lines: rs.reduce((s, r) => s + Number(r.lines_count || 0), 0),
+      };
+    })
+    .filter((r) => r.orders || r.items || r.lines)
+    .sort((a, b) => b.items - a.items);
+  const totalUnclosedItems = unclosedByGroup.reduce((s, r) => s + r.items, 0);
 
   const trendDates = Array.from(new Set(data.map((r) => r.finished_date))).sort((a, b) => a.localeCompare(b));
   const trendGroups = Array.from(new Set(data.map((r) => r.packing_group))).sort((a, b) => a.localeCompare(b, "th"));
@@ -179,27 +200,9 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
         <LineTrendChart dates={trendDates} series={itemTrendSeries} unit="ชิ้น" />
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <section className="card p-4">
-          <h2 className="mb-3 font-semibold">สรุปตามกลุ่มการจัดสินค้า</h2>
-          <div className="space-y-3">
-            {byGroup.length ? byGroup.map((g, i) => {
-              const pct = totalItems ? (g.items / totalItems) * 100 : 0;
-              return (
-                <div key={g.group}>
-                  <div className="mb-1 flex items-center justify-between gap-2 text-sm">
-                    <span className={`badge border ${groupColors[i % groupColors.length]}`}>{g.group}</span>
-                    <span className="font-medium">{num(g.items)} ชิ้น</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
-                  </div>
-                  <div className="mt-1 text-xs text-slate-500">{num(g.orders)} ออเดอร์ · จัดผิด {num(g.wrong)}</div>
-                </div>
-              );
-            }) : <div className="py-8 text-center text-sm text-slate-400">ยังไม่มีข้อมูลตามตัวกรองนี้</div>}
-          </div>
-        </section>
+      <div className="grid gap-6 xl:grid-cols-3">
+        <GroupSummaryCard title="สรุปตามกลุ่มการจัดสินค้า" rows={byGroup} totalItems={totalItems} emptyText="ยังไม่มีข้อมูลตามตัวกรองนี้" />
+        <GroupSummaryCard title="ยังไม่ปิดงานตามกลุ่มการจัดสินค้า" rows={unclosedByGroup} totalItems={totalUnclosedItems} emptyText="ไม่มีรายการที่ยังไม่ปิดงานตามตัวกรองนี้" showLines />
 
         <section className="card p-4">
           <div className="mb-4">
@@ -210,6 +213,46 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
         </section>
       </div>
     </div>
+  );
+}
+
+function GroupSummaryCard({
+  title,
+  rows,
+  totalItems,
+  emptyText,
+  showLines = false,
+}: {
+  title: string;
+  rows: SummaryGroup[];
+  totalItems: number;
+  emptyText: string;
+  showLines?: boolean;
+}) {
+  return (
+    <section className="card p-4">
+      <h2 className="mb-3 font-semibold">{title}</h2>
+      <div className="space-y-3">
+        {rows.length ? rows.map((g, i) => {
+          const pct = totalItems ? (g.items / totalItems) * 100 : 0;
+          return (
+            <div key={g.group}>
+              <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+                <span className={`badge border ${groupColors[i % groupColors.length]}`}>{g.group}</span>
+                <span className="font-medium">{num(g.items)} ชิ้น</span>
+              </div>
+              <div className="h-2 rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+              </div>
+              <div className="mt-1 text-xs text-slate-500">
+                {num(g.orders)} ออเดอร์
+                {showLines ? ` · ${num(g.lines || 0)} รายการ` : ` · จัดผิด ${num(g.wrong || 0)}`}
+              </div>
+            </div>
+          );
+        }) : <div className="py-8 text-center text-sm text-slate-400">{emptyText}</div>}
+      </div>
+    </section>
   );
 }
 
