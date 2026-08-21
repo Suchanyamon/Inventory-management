@@ -27,6 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <NavLink href="/scan" label="สแกนบาร์โค้ด" icon="📷" />
           <NavLink href="/products" label="สินค้า" icon="🏷️" />
           <NavLink href="/order" label="ขออนุมัติสั่งสต๊อก" icon="📝" />
+          <NavLink href="/packing-performance" label="รายงานแพ็คสินค้า" icon="📦" />
           <NavLink href="/reports" label="รายงานมูลค่า" icon="💰" />
           <NavLink href="/movements" label="ประวัติเคลื่อนไหว" icon="🧾" />
           {profile?.role === "admin" && <NavLink href="/settings" label="ตั้งค่า" icon="⚙️" />}
@@ -66,7 +67,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             { href: "/operations", icon: "🔁", label: "ทำรายการ" },
             { href: "/scan", icon: "📷", label: "สแกน" },
             { href: "/order", icon: "📝", label: "สั่งสต๊อก" },
-            { href: "/products", icon: "🏷️", label: "สินค้า" },
+            { href: "/packing-performance", icon: "📦", label: "แพ็ค" },
           ].map((i) => (
             <a key={i.href} href={i.href} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-slate-600">
               <span className="text-lg">{i.icon}</span>

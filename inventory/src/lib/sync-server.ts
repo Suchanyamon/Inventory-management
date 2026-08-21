@@ -8,6 +8,7 @@ import * as XLSX from "xlsx";
 
 const STOCK_SHEET_ID = "1j0n4pMjUKM0eATXb-CbJvtzEF4YZSpXLww6PLUh4HGI"; // ไฟล์ "สั่งสต๊อก"
 const LAYOUT_SHEET_ID = "1EL8bhU_OrODAejHJ1-bt-MHbexV_nFTIX-ylycioexU"; // "Layout PWC19"
+const LGS_PERFORMANCE_SHEET_ID = "1FCkFfn0ef4g4AU1iQxtVjtu-aa5wuZRjvlClbhbr_xc"; // "DATA-Performance -LGS 2026"
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 export interface SyncResult { source: string; ok: boolean; count?: number; error?: string; }
@@ -51,6 +52,28 @@ async function gviz(id: string, sheet: string): Promise<string[][]> {
   return parseCSV(txt);
 }
 const toNum = (v: string) => { const s = (v || "").replace(/[, ]/g, "").replace(/[^0-9.\-]/g, ""); return s === "" || s === "-" ? null : parseFloat(s); };
+const pad2 = (n: number) => String(n).padStart(2, "0");
+function parseShipnityDate(v: string): string | null {
+  const s = (v || "").trim();
+  const m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (!m) return null;
+  const mm = Number(m[1]), dd = Number(m[2]);
+  const yy = Number(m[3]);
+  const yyyy = yy < 100 ? 2000 + yy : yy;
+  if (!mm || !dd || mm > 12 || dd > 31) return null;
+  return `${yyyy}-${pad2(mm)}-${pad2(dd)}`;
+}
+function daysBetween(a: string | null, b: string | null): number | null {
+  if (!a || !b) return null;
+  const t1 = Date.parse(`${a}T00:00:00+07:00`);
+  const t2 = Date.parse(`${b}T00:00:00+07:00`);
+  if (!Number.isFinite(t1) || !Number.isFinite(t2)) return null;
+  return Math.round((t2 - t1) / 86400000);
+}
+function monthLabel(date: string): string {
+  const [, m] = date.split("-");
+  return MONTHS[Number(m) - 1] || "";
+}
 
 // ---------- reorder_plan ----------
 export async function syncReorder(): Promise<SyncResult> {
@@ -162,6 +185,77 @@ export async function syncStorage(): Promise<SyncResult> {
   } catch (e: any) { return { source: "ตำแหน่งเก็บ (storage)", ok: false, error: e.message }; }
 }
 
+// ---------- packing_performance_daily ----------
+// Source: Google Sheet "DATA-Performance -LGS 2026" / tab "Data Shipnity"
+// ใช้ "วันที่ปิด" เป็นวันที่จัดสินค้าเสร็จจริง และคอลัมน์ "วันที่จัดสินค้าเสร็จ" เป็น lead time text
+export async function syncPackingPerformance(): Promise<SyncResult> {
+  try {
+    const rows = await gviz(LGS_PERFORMANCE_SHEET_ID, "Data Shipnity");
+    type Agg = {
+      finished_date: string;
+      packing_group: string;
+      orders: Set<string>;
+      lines_count: number;
+      items_qty: number;
+      wrong_qty: number;
+      close_days_sum: number;
+      close_days_count: number;
+      max_close_days: number | null;
+    };
+    const agg = new Map<string, Agg>();
+
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r] || [];
+      const finishedDate = parseShipnityDate(row[15] || ""); // วันที่ปิด
+      const printedDate = parseShipnityDate(row[19] || ""); // วันที่พิมพ์
+      const group = (row[24] || "").trim() || "(ไม่ระบุ)";
+      if (!finishedDate || !group) continue;
+
+      const key = `${finishedDate}|${group}`;
+      const cur = agg.get(key) || {
+        finished_date: finishedDate,
+        packing_group: group,
+        orders: new Set<string>(),
+        lines_count: 0,
+        items_qty: 0,
+        wrong_qty: 0,
+        close_days_sum: 0,
+        close_days_count: 0,
+        max_close_days: null,
+      };
+
+      cur.orders.add((row[5] || `row-${r}`).trim());
+      cur.lines_count += 1;
+      cur.items_qty += Math.max(0, Math.round(toNum(row[3] || "") ?? 0));
+      cur.wrong_qty += Math.max(0, Math.round(toNum(row[27] || "") ?? 0));
+
+      const closeDays = daysBetween(printedDate, finishedDate);
+      if (closeDays != null) {
+        cur.close_days_sum += closeDays;
+        cur.close_days_count += 1;
+        cur.max_close_days = cur.max_close_days == null ? closeDays : Math.max(cur.max_close_days, closeDays);
+      }
+      agg.set(key, cur);
+    }
+
+    const out = [...agg.values()].map((o) => ({
+      finished_date: o.finished_date,
+      finished_month: monthLabel(o.finished_date),
+      packing_group: o.packing_group,
+      orders_count: o.orders.size,
+      lines_count: o.lines_count,
+      items_qty: o.items_qty,
+      wrong_qty: o.wrong_qty,
+      avg_close_days: o.close_days_count ? Math.round((o.close_days_sum / o.close_days_count) * 100) / 100 : null,
+      max_close_days: o.max_close_days,
+    }));
+    await replaceTable("packing_performance_daily", out);
+    return { source: "แพ็คสินค้า LGS รายวัน", ok: true, count: out.length };
+  } catch (e: any) {
+    return { source: "แพ็คสินค้า LGS รายวัน", ok: false, error: e.message };
+  }
+}
+
 // ---------- Excel จาก OneDrive → monthly_flow + inv_turnover ----------
 const XLSB_SHEETS = ["มูลค่าสต๊อก Week+In-Out รวม", "Inv.Trun Over", "Inv.Trun Over Runitem", "Inv.Trun Over F"];
 
@@ -246,7 +340,7 @@ export async function syncProductMaster(): Promise<SyncResult> {
 
 export async function syncAll(): Promise<SyncResult[]> {
   const excel = await syncExcel();
-  const [reorder, storage, orderPlan, orderForm] = await Promise.all([syncReorder(), syncStorage(), syncOrderPlan(), syncOrderForm()]);
+  const [reorder, storage, orderPlan, orderForm, packing] = await Promise.all([syncReorder(), syncStorage(), syncOrderPlan(), syncOrderForm(), syncPackingPerformance()]);
   const products = await syncProductMaster();
-  return [...excel, reorder, storage, orderPlan, orderForm, products];
+  return [...excel, reorder, storage, orderPlan, orderForm, packing, products];
 }
