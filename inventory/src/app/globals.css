@@ -7,55 +7,53 @@
 /* ---------- Design tokens (CI: แดงเลือดนก / ขาว สดใส) ---------- */
 :root {
   color-scheme: light;
-  --bg: #fffafb;
+  --bg: #faf8f7;
   --surface: #ffffff;
-  --surface-2: #fff3f4;
-  --border: #f0d7d7;
-  --border-2: #fae7e8;
+  --surface-2: #f8f5f3;
+  --border: #e7ddd9;
+  --border-2: #f1ebe8;
   --text: #241112;
-  --muted: #6f4a4d;
-  --faint: #9f7478;
+  --muted: #695b58;
+  --faint: #9a8d89;
   --brand: #780808;
   --brand-fg: #4A0505;
-  --brand-soft: #fff0f1;
-  --brand-ring: #d98989;
-  --chart-input: #047857;
-  --chart-output: #D99000;
+  --brand-soft: #f8eeee;
+  --brand-ring: #c98f8f;
+  --chart-input: #065f46;
+  --chart-output: #b45309;
   --chart-inventory: #780808;
 }
 .dark {
   color-scheme: dark;
-  --bg: #12080a;
-  --surface: #1d1114;
-  --surface-2: #28171b;
-  --border: #4b2b31;
-  --border-2: #372127;
-  --text: #fff8f3;
-  --muted: #f0cbc3;
-  --faint: #d7aaa4;
-  --brand: #b91c1c;
+  --bg: #11100f;
+  --surface: #1c1817;
+  --surface-2: #272221;
+  --border: #443936;
+  --border-2: #332b29;
+  --text: #fffaf7;
+  --muted: #d8cbc6;
+  --faint: #b9aaa5;
+  --brand: #9f1111;
   --brand-fg: #FFE8E8;
-  --brand-soft: #341517;
-  --brand-ring: #fb8b8b;
-  --chart-input: #34D399;
-  --chart-output: #F4B63D;
-  --chart-inventory: #FF7B7B;
+  --brand-soft: #2f1b1b;
+  --brand-ring: #d68585;
+  --chart-input: #10b981;
+  --chart-output: #d97706;
+  --chart-inventory: #f87171;
 }
 
 html, body {
   min-height: 100%;
   background:
-    radial-gradient(circle at 12% -10%, rgba(120, 8, 8, 0.12), transparent 32rem),
-    radial-gradient(circle at 92% 0%, rgba(217, 144, 0, 0.10), transparent 28rem),
-    linear-gradient(180deg, #ffffff 0%, var(--bg) 42%, #fff6f7 100%);
+    radial-gradient(circle at 12% -10%, rgba(120, 8, 8, 0.08), transparent 30rem),
+    linear-gradient(180deg, #ffffff 0%, var(--bg) 52%, #f7f4f2 100%);
   color: var(--text);
   font-family: var(--font-sans), "Segoe UI", "Noto Sans Thai", system-ui, sans-serif;
 }
 .dark body {
   background:
-    radial-gradient(circle at 10% -10%, rgba(185, 28, 28, 0.30), transparent 28rem),
-    radial-gradient(circle at 92% 4%, rgba(244, 182, 61, 0.14), transparent 26rem),
-    linear-gradient(180deg, #16090b 0%, var(--bg) 45%, #090405 100%);
+    radial-gradient(circle at 10% -10%, rgba(159, 17, 17, 0.22), transparent 28rem),
+    linear-gradient(180deg, #171312 0%, var(--bg) 48%, #0b0a09 100%);
 }
 
 /* Component classes — plain CSS (unlayered) ใช้ token โดยตรง เพื่อให้ปรับตามธีมได้ชัวร์ */
@@ -63,10 +61,10 @@ html, body {
   border-radius: 1rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 14px 36px -28px rgba(120, 8, 8, 0.30), 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  box-shadow: 0 14px 34px -30px rgba(80, 35, 25, 0.26), 0 1px 2px 0 rgb(0 0 0 / 0.04);
 }
 .dark .card {
-  box-shadow: 0 18px 46px -34px rgba(255, 123, 123, 0.26), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  box-shadow: 0 18px 46px -34px rgba(248, 113, 113, 0.18), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
 }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
