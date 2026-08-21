@@ -101,7 +101,7 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
   const trendSeries = trendGroups.map((g, i) => ({
     label: g,
     color: chartPalette[i % chartPalette.length],
-    points: trendDates.map((d) => data.find((r) => r.finished_date === d && r.packing_group === g)?.orders_count || 0),
+    points: trendDates.map((d) => data.find((r) => r.finished_date === d && r.packing_group === g)?.items_qty || 0),
   }));
   const statusByName = new Map<string, { completion_status: string; orders_count: number; lines_count: number; items_qty: number }>();
   for (const row of statusRaw) {
@@ -160,7 +160,7 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
         <section className="card p-4">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="font-semibold">จำนวน order_number ที่แพ็คต่อวัน</h2>
+              <h2 className="font-semibold">จำนวนตัวที่แพ็คต่อวัน</h2>
               <p className="text-xs text-slate-500">กราฟเส้นแยกตามกลุ่มการจัดสินค้า</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -172,7 +172,7 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
               ))}
             </div>
           </div>
-          <LineOrdersChart dates={trendDates} series={trendSeries} />
+          <LinePackedItemsChart dates={trendDates} series={trendSeries} />
         </section>
 
         <section className="card p-4">
@@ -248,7 +248,7 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
   );
 }
 
-function LineOrdersChart({ dates, series }: { dates: string[]; series: { label: string; color: string; points: number[] }[] }) {
+function LinePackedItemsChart({ dates, series }: { dates: string[]; series: { label: string; color: string; points: number[] }[] }) {
   const width = 920;
   const height = 300;
   const pad = { top: 24, right: 24, bottom: 48, left: 44 };
