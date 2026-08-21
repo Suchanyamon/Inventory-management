@@ -187,7 +187,9 @@ export async function syncStorage(): Promise<SyncResult> {
 
 // ---------- packing_performance_daily ----------
 // Source: Google Sheet "DATA-Performance -LGS 2026" / tab "Data Shipnity"
-// ใช้ "วันที่ปิด" เป็นวันที่จัดสินค้าเสร็จจริง และคอลัมน์ "วันที่จัดสินค้าเสร็จ" เป็น lead time text
+// ใช้ "วันที่ปิด" เป็นวันที่จัดสินค้าเสร็จจริง ถ้าว่างให้ใช้ "วันที่พิมพ์" เป็นวันที่อ้างอิง
+// เพื่อให้ยอดรวมตามกลุ่มไม่ตกหล่นจากแถวที่ยังไม่ได้ระบุวันปิดงาน
+// คอลัมน์ "วันที่จัดสินค้าเสร็จ" เป็น lead time/status text
 export async function syncPackingPerformance(): Promise<SyncResult> {
   try {
     const rows = await gviz(LGS_PERFORMANCE_SHEET_ID, "Data Shipnity");
@@ -208,12 +210,13 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
 
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r] || [];
-      const finishedDate = parseShipnityDate(row[15] || ""); // วันที่ปิด
+      const closeDate = parseShipnityDate(row[15] || ""); // วันที่ปิด
       const printedDate = parseShipnityDate(row[19] || ""); // วันที่พิมพ์
+      const finishedDate = closeDate || printedDate;
       const group = (row[24] || "").trim() || "(ไม่ระบุ)";
       const orderNumber = (row[5] || `row-${r}`).trim();
       const itemQty = Math.max(0, Math.round(toNum(row[3] || "") ?? 0));
-      const completionStatus = (row[25] || "").trim() || "(ไม่ระบุสถานะ)";
+      const completionStatus = (row[25] || "").trim() || (closeDate ? "(ไม่ระบุสถานะ)" : "ยังไม่ระบุวันปิดงาน");
 
       if (orderNumber && finishedDate && group) {
         const statusKey = `${finishedDate}|${group}|${completionStatus}`;
@@ -251,7 +254,7 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
       cur.items_qty += itemQty;
       cur.wrong_qty += Math.max(0, Math.round(toNum(row[27] || "") ?? 0));
 
-      const closeDays = daysBetween(printedDate, finishedDate);
+      const closeDays = closeDate ? daysBetween(printedDate, closeDate) : null;
       if (closeDays != null) {
         cur.close_days_sum += closeDays;
         cur.close_days_count += 1;
