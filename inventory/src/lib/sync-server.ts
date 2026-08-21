@@ -506,7 +506,7 @@ export async function syncDataSkuPack(): Promise<SyncResult> {
       if (exactRow) {
         return {
           sku,
-          name_th: exactRow.name,
+          name_th: exactRow.name || sku,
           size: exactRow.size,
           sku_formula: exactRow.formula,
           units_per_carton: exactRow.unitsPerCarton,
