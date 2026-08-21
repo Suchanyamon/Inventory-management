@@ -9,8 +9,10 @@ export default function NavLink({ href, label, icon }: { href: string; label: st
     <Link
       href={href}
       className={
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition " +
-        (active ? "bg-brand text-white" : "text-slate-600 hover:bg-slate-100")
+        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition " +
+        (active
+          ? "bg-gradient-to-r from-brand to-red-700 text-white shadow-lg shadow-red-900/15"
+          : "text-slate-600 hover:bg-brand/5 hover:text-brand")
       }
     >
       <span className="text-base">{icon}</span>

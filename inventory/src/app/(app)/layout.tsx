@@ -12,9 +12,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white p-4 md:flex">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white/92 p-4 shadow-[18px_0_42px_-38px_rgba(120,8,8,0.45)] backdrop-blur dark:border-slate-200 dark:bg-[#1d1114]/92 md:flex">
         <div className="mb-6 flex items-center gap-2 px-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand text-white">📦</span>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white shadow-lg shadow-red-900/20">📦</span>
           <div>
             <div className="text-sm font-semibold leading-tight">คลังสินค้า</div>
             <div className="text-xs text-slate-400">DCMT · DCMTA</div>
@@ -48,7 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Main */}
       <div className="flex-1">
         {/* Mobile top bar */}
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between border-b border-slate-200 bg-white/92 px-4 py-3 shadow-sm backdrop-blur dark:border-slate-200 dark:bg-[#1d1114]/92 md:hidden">
           <span className="flex items-center gap-2 font-semibold">📦 คลังสินค้า</span>
           <div className="flex items-center gap-2">
             <ThemeToggle className="!px-2 !py-1 text-xs" />
@@ -59,7 +59,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
         <main className="mx-auto max-w-7xl p-4 md:p-6">{children}</main>
         {/* Mobile bottom nav */}
-        <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-slate-200 bg-white md:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-slate-200 bg-white/95 shadow-[0_-12px_30px_-26px_rgba(120,8,8,0.55)] backdrop-blur dark:border-slate-200 dark:bg-[#1d1114]/95 md:hidden">
           {[
             { href: "/", icon: "📊", label: "POLO" },
             { href: "/pwc19", icon: "🏬", label: "PWC19" },
