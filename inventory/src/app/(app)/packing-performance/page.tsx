@@ -161,25 +161,15 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
         <Kpi label="จัดผิด" value={num(totalWrong)} tone={totalWrong ? "text-red-600" : "text-slate-700"} sub={avgDays == null ? undefined : `เฉลี่ยปิดงาน ${avgDays.toFixed(1)} วัน`} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-        <section className="card p-4">
-          <div className="mb-4">
-            <div>
-              <h2 className="font-semibold">จำนวน order_number ที่แพ็คต่อวัน</h2>
-              <p className="text-xs text-slate-500">กราฟเส้นแยกตามกลุ่มการจัดสินค้า · ชี้ที่เส้นหรือจุดเพื่อดูชื่อข้อมูล</p>
-            </div>
+      <section className="card p-4">
+        <div className="mb-4">
+          <div>
+            <h2 className="font-semibold">จำนวน order_number ที่แพ็คต่อวัน</h2>
+            <p className="text-xs text-slate-500">กราฟเส้นแยกตามกลุ่มการจัดสินค้า · ชี้ที่เส้นหรือจุดเพื่อดูชื่อข้อมูล</p>
           </div>
-          <LineTrendChart dates={trendDates} series={orderTrendSeries} unit="ออเดอร์" />
-        </section>
-
-        <section className="card p-4">
-          <div className="mb-4">
-            <h2 className="font-semibold">สัดส่วนสถานะวันที่จัดสินค้าเสร็จ</h2>
-            <p className="text-xs text-slate-500">นับจากจำนวนเลข order_number · ชี้ที่ชิ้นกราฟเพื่อดูชื่อสถานะ</p>
-          </div>
-          <PieStatusChart rows={statusData} total={pieTotal} />
-        </section>
-      </div>
+        </div>
+        <LineTrendChart dates={trendDates} series={orderTrendSeries} unit="ออเดอร์" />
+      </section>
 
       <section className="card p-4">
         <div className="mb-4">
@@ -189,7 +179,7 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
         <LineTrendChart dates={trendDates} series={itemTrendSeries} unit="ชิ้น" />
       </section>
 
-      <div className="grid gap-6">
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <section className="card p-4">
           <h2 className="mb-3 font-semibold">สรุปตามกลุ่มการจัดสินค้า</h2>
           <div className="space-y-3">
@@ -209,6 +199,14 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
               );
             }) : <div className="py-8 text-center text-sm text-slate-400">ยังไม่มีข้อมูลตามตัวกรองนี้</div>}
           </div>
+        </section>
+
+        <section className="card p-4">
+          <div className="mb-4">
+            <h2 className="font-semibold">สัดส่วนสถานะวันที่จัดสินค้าเสร็จ</h2>
+            <p className="text-xs text-slate-500">นับจากจำนวนเลข order_number · ชี้ที่ชิ้นกราฟเพื่อดูชื่อสถานะ</p>
+          </div>
+          <PieStatusChart rows={statusData} total={pieTotal} />
         </section>
       </div>
     </div>
