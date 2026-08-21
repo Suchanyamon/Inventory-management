@@ -42,6 +42,8 @@ type SummaryGroup = {
   lines?: number;
 };
 
+type SupabaseServerClient = ReturnType<typeof createSupabaseServer>;
+
 const groupColors = [
   "bg-emerald-100 text-emerald-700 border-emerald-200",
   "bg-amber-100 text-amber-700 border-amber-200",
@@ -58,6 +60,36 @@ function thDate(iso: string) {
     month: "short",
     year: "numeric",
   });
+}
+
+async function fetchRawPackingRows(
+  supabase: SupabaseServerClient,
+  group: string,
+  startDate: string,
+  endDate: string,
+) {
+  const pageSize = 1000;
+  const rows: RawPackingRow[] = [];
+
+  for (let from = 0; from < 200000; from += pageSize) {
+    let pageQ = supabase
+      .from("packing_performance_rows")
+      .select("ref_date,packing_group,completion_status,order_number,lines_count,items_qty,wrong_qty")
+      .order("source_row", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (group !== "ALL") pageQ = pageQ.eq("packing_group", group);
+    if (startDate) pageQ = pageQ.gte("ref_date", startDate);
+    if (endDate) pageQ = pageQ.lte("ref_date", endDate);
+
+    const { data } = await pageQ;
+    const page = (data || []) as RawPackingRow[];
+    rows.push(...page);
+
+    if (page.length < pageSize) break;
+  }
+
+  return rows;
 }
 
 export default async function PackingPerformancePage({ searchParams }: { searchParams: { group?: string; date?: string; start?: string; end?: string } }) {
@@ -77,14 +109,6 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
   if (startDate) q = q.gte("finished_date", startDate);
   if (endDate) q = q.lte("finished_date", endDate);
 
-  let rawQ = supabase
-    .from("packing_performance_rows")
-    .select("ref_date,packing_group,completion_status,order_number,lines_count,items_qty,wrong_qty")
-    .range(0, 49999);
-  if (group !== "ALL") rawQ = rawQ.eq("packing_group", group);
-  if (startDate) rawQ = rawQ.gte("ref_date", startDate);
-  if (endDate) rawQ = rawQ.lte("ref_date", endDate);
-
   let statusQ = supabase
     .from("packing_completion_status_daily")
     .select("finished_date,packing_group,completion_status,orders_count,lines_count,items_qty")
@@ -93,9 +117,9 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
   if (startDate) statusQ = statusQ.gte("finished_date", startDate);
   if (endDate) statusQ = statusQ.lte("finished_date", endDate);
 
-  const [{ data: rows }, { data: rawRows }, { data: groups }, { data: latest }] = await Promise.all([
+  const [{ data: rows }, rawRows, { data: groups }, { data: latest }] = await Promise.all([
     q,
-    rawQ,
+    fetchRawPackingRows(supabase, group, startDate, endDate),
     supabase.from("packing_performance_daily").select("packing_group").order("packing_group", { ascending: true }),
     supabase.from("packing_performance_daily").select("finished_date").order("finished_date", { ascending: false }).limit(1),
   ]);
