@@ -292,8 +292,8 @@ function GroupSummaryCard({
 
 function LineTrendChart({ dates, series, unit }: { dates: string[]; series: { label: string; color: string; points: number[] }[]; unit: string }) {
   const width = 920;
-  const height = 300;
-  const pad = { top: 24, right: 24, bottom: 48, left: 44 };
+  const height = 330;
+  const pad = { top: 24, right: 24, bottom: 78, left: 44 };
   const chartW = width - pad.left - pad.right;
   const chartH = height - pad.top - pad.bottom;
   const maxY = Math.max(1, ...series.flatMap((s) => s.points));
@@ -301,6 +301,12 @@ function LineTrendChart({ dates, series, unit }: { dates: string[]; series: { la
   const x = (i: number) => pad.left + (dates.length <= 1 ? chartW / 2 : (i / (dates.length - 1)) * chartW);
   const y = (v: number) => pad.top + chartH - (v / yTop) * chartH;
   const ticks = [0, Math.round(yTop / 2), yTop];
+  const labelStep = Math.max(1, Math.ceil(dates.length / 10));
+  const visibleDateLabels = new Set(
+    dates
+      .map((_, i) => i)
+      .filter((i) => i === 0 || i === dates.length - 1 || i % labelStep === 0),
+  );
 
   if (!dates.length || !series.length) {
     return <div className="flex h-[300px] items-center justify-center text-sm text-slate-400">ยังไม่มีข้อมูลสำหรับกราฟเส้น</div>;
@@ -315,8 +321,15 @@ function LineTrendChart({ dates, series, unit }: { dates: string[]; series: { la
             <text x={pad.left - 10} y={y(t) + 4} textAnchor="end" className="fill-slate-400 text-[11px]">{num(t)}</text>
           </g>
         ))}
-        {dates.map((d, i) => (
-          <text key={d} x={x(i)} y={height - 18} textAnchor="middle" className="fill-slate-500 text-[11px]">
+        {dates.map((d, i) => visibleDateLabels.has(i) && (
+          <text
+            key={d}
+            x={x(i)}
+            y={height - 42}
+            textAnchor="end"
+            transform={`rotate(-35 ${x(i)} ${height - 42})`}
+            className="fill-slate-500 text-[10px] font-medium"
+          >
             {thDate(d).replace("2569", "69")}
           </text>
         ))}
