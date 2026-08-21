@@ -60,10 +60,12 @@ function thDate(iso: string) {
   });
 }
 
-export default async function PackingPerformancePage({ searchParams }: { searchParams: { group?: string; date?: string } }) {
+export default async function PackingPerformancePage({ searchParams }: { searchParams: { group?: string; date?: string; start?: string; end?: string } }) {
   const supabase = createSupabaseServer();
   const group = searchParams.group || "ALL";
-  const date = searchParams.date || "";
+  const legacyDate = searchParams.date || "";
+  const startDate = searchParams.start || legacyDate || "";
+  const endDate = searchParams.end || legacyDate || "";
 
   let q = supabase
     .from("packing_performance_daily")
@@ -72,21 +74,24 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
     .order("packing_group", { ascending: true });
 
   if (group !== "ALL") q = q.eq("packing_group", group);
-  if (date) q = q.eq("finished_date", date);
+  if (startDate) q = q.gte("finished_date", startDate);
+  if (endDate) q = q.lte("finished_date", endDate);
 
   let rawQ = supabase
     .from("packing_performance_rows")
     .select("ref_date,packing_group,completion_status,order_number,lines_count,items_qty,wrong_qty")
     .range(0, 49999);
   if (group !== "ALL") rawQ = rawQ.eq("packing_group", group);
-  if (date) rawQ = rawQ.eq("ref_date", date);
+  if (startDate) rawQ = rawQ.gte("ref_date", startDate);
+  if (endDate) rawQ = rawQ.lte("ref_date", endDate);
 
   let statusQ = supabase
     .from("packing_completion_status_daily")
     .select("finished_date,packing_group,completion_status,orders_count,lines_count,items_qty")
     .order("orders_count", { ascending: false });
   if (group !== "ALL") statusQ = statusQ.eq("packing_group", group);
-  if (date) statusQ = statusQ.eq("finished_date", date);
+  if (startDate) statusQ = statusQ.gte("finished_date", startDate);
+  if (endDate) statusQ = statusQ.lte("finished_date", endDate);
 
   const [{ data: rows }, { data: rawRows }, { data: groups }, { data: latest }] = await Promise.all([
     q,
@@ -192,11 +197,15 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
             </select>
           </label>
           <label className="block">
-            <span className="label">วันที่จัดสินค้าเสร็จ</span>
-            <input name="date" defaultValue={date} type="date" className="input w-52" />
+            <span className="label">วันที่เริ่มต้น</span>
+            <input name="start" defaultValue={startDate} type="date" className="input w-52" />
+          </label>
+          <label className="block">
+            <span className="label">วันที่สิ้นสุด</span>
+            <input name="end" defaultValue={endDate} type="date" className="input w-52" />
           </label>
           <button className="btn-primary" type="submit">กรองรายงาน</button>
-          {(group !== "ALL" || date) && <a href="/packing-performance" className="btn-ghost">ล้างตัวกรอง</a>}
+          {(group !== "ALL" || startDate || endDate) && <a href="/packing-performance" className="btn-ghost">ล้างตัวกรอง</a>}
         </form>
       </div>
 
