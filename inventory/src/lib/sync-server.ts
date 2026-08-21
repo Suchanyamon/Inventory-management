@@ -524,6 +524,7 @@ export async function syncDataSkuPack(): Promise<SyncResult> {
       const formulaBase = children[0]?.formula?.split(" ")[0] || null;
       return {
         sku,
+        name_th: children.find((row) => row.name)?.name || sku,
         sku_formula: formulaBase,
         units_per_carton: modeNumber(packs),
         cost_current: avgNumber(costs),
