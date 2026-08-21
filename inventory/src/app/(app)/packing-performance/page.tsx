@@ -361,12 +361,12 @@ function LineTrendChart({ dates, series, unit }: { dates: string[]; series: { la
           const d = s.points.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p)}`).join(" ");
           return (
             <g key={s.label}>
-              <path d={d} fill="none" stroke={s.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d={d} fill="none" stroke={s.color} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round">
                 <title>{`${s.label} · ${unit}`}</title>
               </path>
               {s.points.map((p, i) => (
                 <g key={`${s.label}-${dates[i]}`}>
-                  <circle cx={x(i)} cy={y(p)} r="4" fill={s.color} stroke="white" strokeWidth="2">
+                  <circle cx={x(i)} cy={y(p)} r="3" fill={s.color} stroke="white" strokeWidth="1.5">
                     <title>{`${s.label} · ${thDate(dates[i])} · ${num(p)} ${unit}`}</title>
                   </circle>
                   {p > 0 && <text x={x(i)} y={y(p) - 9} textAnchor="middle" className="fill-slate-700 text-[10px] font-semibold">{num(p)}</text>}
