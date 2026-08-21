@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 space-y-1">
           <NavLink href="/" label="แดชบอร์ด POLOMAKER" icon="📊" />
           <NavLink href="/pwc19" label="แดชบอร์ด PWC19" icon="🏬" />
-          <NavLink href="/packing-performance" label="รายการแพ็ตสินค้ารายวัน" icon="📦" />
+          <NavLink href="/packing-performance" label="รายการแพ็คสินค้ารายวัน" icon="📦" />
           <NavLink href="/operations" label="รับ-เบิก-โอน" icon="🔁" />
           <NavLink href="/scan" label="สแกนบาร์โค้ด" icon="📷" />
           <NavLink href="/products" label="สินค้า" icon="🏷️" />
