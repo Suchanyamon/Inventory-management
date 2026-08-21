@@ -203,12 +203,34 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
       max_close_days: number | null;
     };
     const agg = new Map<string, Agg>();
+    type StatusAgg = { finished_date: string; packing_group: string; status: string; orders: Set<string>; lines_count: number; items_qty: number };
+    const statusAgg = new Map<string, StatusAgg>();
 
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r] || [];
       const finishedDate = parseShipnityDate(row[15] || ""); // วันที่ปิด
       const printedDate = parseShipnityDate(row[19] || ""); // วันที่พิมพ์
       const group = (row[24] || "").trim() || "(ไม่ระบุ)";
+      const orderNumber = (row[5] || `row-${r}`).trim();
+      const itemQty = Math.max(0, Math.round(toNum(row[3] || "") ?? 0));
+      const completionStatus = (row[25] || "").trim() || "(ไม่ระบุสถานะ)";
+
+      if (orderNumber && finishedDate && group) {
+        const statusKey = `${finishedDate}|${group}|${completionStatus}`;
+        const status = statusAgg.get(statusKey) || {
+          finished_date: finishedDate,
+          packing_group: group,
+          status: completionStatus,
+          orders: new Set<string>(),
+          lines_count: 0,
+          items_qty: 0,
+        };
+        status.orders.add(orderNumber);
+        status.lines_count += 1;
+        status.items_qty += itemQty;
+        statusAgg.set(statusKey, status);
+      }
+
       if (!finishedDate || !group) continue;
 
       const key = `${finishedDate}|${group}`;
@@ -224,9 +246,9 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
         max_close_days: null,
       };
 
-      cur.orders.add((row[5] || `row-${r}`).trim());
+      cur.orders.add(orderNumber);
       cur.lines_count += 1;
-      cur.items_qty += Math.max(0, Math.round(toNum(row[3] || "") ?? 0));
+      cur.items_qty += itemQty;
       cur.wrong_qty += Math.max(0, Math.round(toNum(row[27] || "") ?? 0));
 
       const closeDays = daysBetween(printedDate, finishedDate);
@@ -249,7 +271,16 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
       avg_close_days: o.close_days_count ? Math.round((o.close_days_sum / o.close_days_count) * 100) / 100 : null,
       max_close_days: o.max_close_days,
     }));
+    const statusOut = [...statusAgg.values()].map((o) => ({
+      finished_date: o.finished_date,
+      packing_group: o.packing_group,
+      completion_status: o.status,
+      orders_count: o.orders.size,
+      lines_count: o.lines_count,
+      items_qty: o.items_qty,
+    }));
     await replaceTable("packing_performance_daily", out);
+    await replaceTable("packing_completion_status_daily", statusOut);
     return { source: "แพ็คสินค้า LGS รายวัน", ok: true, count: out.length };
   } catch (e: any) {
     return { source: "แพ็คสินค้า LGS รายวัน", ok: false, error: e.message };
