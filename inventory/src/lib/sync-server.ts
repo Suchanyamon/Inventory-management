@@ -207,6 +207,7 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
     const agg = new Map<string, Agg>();
     type StatusAgg = { finished_date: string; packing_group: string; status: string; orders: Set<string>; lines_count: number; items_qty: number };
     const statusAgg = new Map<string, StatusAgg>();
+    const rawRows: any[] = [];
 
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r] || [];
@@ -216,7 +217,21 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
       const group = (row[24] || "").trim() || "(ไม่ระบุ)";
       const orderNumber = (row[5] || `row-${r}`).trim();
       const itemQty = Math.max(0, Math.round(toNum(row[3] || "") ?? 0));
+      const wrongQty = Math.max(0, Math.round(toNum(row[27] || "") ?? 0));
       const completionStatus = (row[25] || "").trim() || (closeDate ? "(ไม่ระบุสถานะ)" : "ยังไม่ระบุวันปิดงาน");
+
+      rawRows.push({
+        source_row: r + 1,
+        ref_date: finishedDate,
+        close_date: closeDate,
+        printed_date: printedDate,
+        packing_group: group,
+        completion_status: completionStatus,
+        order_number: orderNumber || null,
+        lines_count: 1,
+        items_qty: itemQty,
+        wrong_qty: wrongQty,
+      });
 
       if (orderNumber && finishedDate && group) {
         const statusKey = `${finishedDate}|${group}|${completionStatus}`;
@@ -252,7 +267,7 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
       cur.orders.add(orderNumber);
       cur.lines_count += 1;
       cur.items_qty += itemQty;
-      cur.wrong_qty += Math.max(0, Math.round(toNum(row[27] || "") ?? 0));
+      cur.wrong_qty += wrongQty;
 
       const closeDays = closeDate ? daysBetween(printedDate, closeDate) : null;
       if (closeDays != null) {
@@ -282,6 +297,7 @@ export async function syncPackingPerformance(): Promise<SyncResult> {
       lines_count: o.lines_count,
       items_qty: o.items_qty,
     }));
+    await replaceTable("packing_performance_rows", rawRows);
     await replaceTable("packing_performance_daily", out);
     await replaceTable("packing_completion_status_daily", statusOut);
     return { source: "แพ็คสินค้า LGS รายวัน", ok: true, count: out.length };

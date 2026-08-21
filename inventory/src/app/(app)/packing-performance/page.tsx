@@ -24,6 +24,16 @@ type StatusRow = {
   items_qty: number;
 };
 
+type RawPackingRow = {
+  ref_date: string | null;
+  packing_group: string;
+  completion_status: string;
+  order_number: string | null;
+  lines_count: number;
+  items_qty: number;
+  wrong_qty: number;
+};
+
 type SummaryGroup = {
   group: string;
   orders: number;
@@ -59,11 +69,17 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
     .from("packing_performance_daily")
     .select("finished_date,finished_month,packing_group,orders_count,lines_count,items_qty,wrong_qty,avg_close_days,max_close_days")
     .order("finished_date", { ascending: false })
-    .order("packing_group", { ascending: true })
-    .limit(240);
+    .order("packing_group", { ascending: true });
 
   if (group !== "ALL") q = q.eq("packing_group", group);
   if (date) q = q.eq("finished_date", date);
+
+  let rawQ = supabase
+    .from("packing_performance_rows")
+    .select("ref_date,packing_group,completion_status,order_number,lines_count,items_qty,wrong_qty")
+    .range(0, 49999);
+  if (group !== "ALL") rawQ = rawQ.eq("packing_group", group);
+  if (date) rawQ = rawQ.eq("ref_date", date);
 
   let statusQ = supabase
     .from("packing_completion_status_daily")
@@ -72,31 +88,34 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
   if (group !== "ALL") statusQ = statusQ.eq("packing_group", group);
   if (date) statusQ = statusQ.eq("finished_date", date);
 
-  const [{ data: rows }, { data: groups }, { data: latest }] = await Promise.all([
+  const [{ data: rows }, { data: rawRows }, { data: groups }, { data: latest }] = await Promise.all([
     q,
+    rawQ,
     supabase.from("packing_performance_daily").select("packing_group").order("packing_group", { ascending: true }),
     supabase.from("packing_performance_daily").select("finished_date").order("finished_date", { ascending: false }).limit(1),
   ]);
   const { data: statusRows } = await statusQ;
 
   const data = (rows || []) as Row[];
+  const rawData = (rawRows || []) as RawPackingRow[];
   const statusRaw = (statusRows || []) as StatusRow[];
+  const hasRawData = rawData.length > 0;
   const groupList = Array.from(new Set((groups || []).map((r) => r.packing_group).filter(Boolean)));
   const latestDate = latest?.[0]?.finished_date as string | undefined;
-  const totalOrders = data.reduce((s, r) => s + Number(r.orders_count || 0), 0);
-  const totalLines = data.reduce((s, r) => s + Number(r.lines_count || 0), 0);
-  const totalItems = data.reduce((s, r) => s + Number(r.items_qty || 0), 0);
-  const totalWrong = data.reduce((s, r) => s + Number(r.wrong_qty || 0), 0);
+  const totalOrders = hasRawData ? new Set(rawData.map((r) => r.order_number).filter(Boolean)).size : data.reduce((s, r) => s + Number(r.orders_count || 0), 0);
+  const totalLines = (hasRawData ? rawData : data).reduce((s, r) => s + Number(r.lines_count || 0), 0);
+  const totalItems = (hasRawData ? rawData : data).reduce((s, r) => s + Number(r.items_qty || 0), 0);
+  const totalWrong = (hasRawData ? rawData : data).reduce((s, r) => s + Number(r.wrong_qty || 0), 0);
   const weightedDays = data.reduce((s, r) => s + Number(r.avg_close_days || 0) * Number(r.lines_count || 0), 0);
   const dayWeight = data.reduce((s, r) => s + (r.avg_close_days == null ? 0 : Number(r.lines_count || 0)), 0);
   const avgDays = dayWeight ? weightedDays / dayWeight : null;
 
   const byGroup: SummaryGroup[] = groupList
     .map((g) => {
-      const rs = data.filter((r) => r.packing_group === g);
+      const rs = (hasRawData ? rawData : data).filter((r) => r.packing_group === g);
       return {
         group: g,
-        orders: rs.reduce((s, r) => s + Number(r.orders_count || 0), 0),
+        orders: hasRawData ? new Set((rs as RawPackingRow[]).map((r) => r.order_number).filter(Boolean)).size : (rs as Row[]).reduce((s, r) => s + Number(r.orders_count || 0), 0),
         items: rs.reduce((s, r) => s + Number(r.items_qty || 0), 0),
         wrong: rs.reduce((s, r) => s + Number(r.wrong_qty || 0), 0),
       };
@@ -105,10 +124,12 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
     .sort((a, b) => b.items - a.items);
   const unclosedByGroup: SummaryGroup[] = groupList
     .map((g) => {
-      const rs = statusRaw.filter((r) => r.packing_group === g && r.completion_status === "ยังไม่ระบุวันปิดงาน");
+      const rs = hasRawData
+        ? rawData.filter((r) => r.packing_group === g && r.completion_status === "ยังไม่ระบุวันปิดงาน")
+        : statusRaw.filter((r) => r.packing_group === g && r.completion_status === "ยังไม่ระบุวันปิดงาน");
       return {
         group: g,
-        orders: rs.reduce((s, r) => s + Number(r.orders_count || 0), 0),
+        orders: hasRawData ? new Set((rs as RawPackingRow[]).map((r) => r.order_number).filter(Boolean)).size : (rs as StatusRow[]).reduce((s, r) => s + Number(r.orders_count || 0), 0),
         items: rs.reduce((s, r) => s + Number(r.items_qty || 0), 0),
         lines: rs.reduce((s, r) => s + Number(r.lines_count || 0), 0),
       };
@@ -129,20 +150,24 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
     color: chartPalette[i % chartPalette.length],
     points: trendDates.map((d) => data.find((r) => r.finished_date === d && r.packing_group === g)?.items_qty || 0),
   }));
-  const statusByName = new Map<string, { completion_status: string; orders_count: number; lines_count: number; items_qty: number }>();
-  for (const row of statusRaw) {
+  const statusByName = new Map<string, { completion_status: string; orders: Set<string>; orders_count: number; lines_count: number; items_qty: number }>();
+  for (const row of hasRawData ? rawData : statusRaw) {
     const cur = statusByName.get(row.completion_status) || {
       completion_status: row.completion_status,
+      orders: new Set<string>(),
       orders_count: 0,
       lines_count: 0,
       items_qty: 0,
     };
-    cur.orders_count += Number(row.orders_count || 0);
+    if (hasRawData && "order_number" in row && row.order_number) cur.orders.add(row.order_number);
+    if (!hasRawData && "orders_count" in row) cur.orders_count += Number(row.orders_count || 0);
     cur.lines_count += Number(row.lines_count || 0);
     cur.items_qty += Number(row.items_qty || 0);
     statusByName.set(row.completion_status, cur);
   }
-  const statusData = [...statusByName.values()].sort((a, b) => b.orders_count - a.orders_count);
+  const statusData = [...statusByName.values()]
+    .map((r) => ({ completion_status: r.completion_status, orders_count: hasRawData ? r.orders.size : r.orders_count, lines_count: r.lines_count, items_qty: r.items_qty }))
+    .sort((a, b) => b.orders_count - a.orders_count);
   const pieTotal = statusData.reduce((s, r) => s + Number(r.orders_count || 0), 0);
 
   return (
