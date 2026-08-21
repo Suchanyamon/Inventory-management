@@ -98,7 +98,12 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
 
   const trendDates = Array.from(new Set(data.map((r) => r.finished_date))).sort((a, b) => a.localeCompare(b));
   const trendGroups = Array.from(new Set(data.map((r) => r.packing_group))).sort((a, b) => a.localeCompare(b, "th"));
-  const trendSeries = trendGroups.map((g, i) => ({
+  const orderTrendSeries = trendGroups.map((g, i) => ({
+    label: g,
+    color: chartPalette[i % chartPalette.length],
+    points: trendDates.map((d) => data.find((r) => r.finished_date === d && r.packing_group === g)?.orders_count || 0),
+  }));
+  const itemTrendSeries = trendGroups.map((g, i) => ({
     label: g,
     color: chartPalette[i % chartPalette.length],
     points: trendDates.map((d) => data.find((r) => r.finished_date === d && r.packing_group === g)?.items_qty || 0),
@@ -158,33 +163,33 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
 
       <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <section className="card p-4">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="mb-4">
             <div>
-              <h2 className="font-semibold">จำนวนตัวที่แพ็คต่อวัน</h2>
-              <p className="text-xs text-slate-500">กราฟเส้นแยกตามกลุ่มการจัดสินค้า</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {trendSeries.map((s) => (
-                <span key={s.label} className="inline-flex items-center gap-1.5 text-xs text-slate-500">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                  {s.label}
-                </span>
-              ))}
+              <h2 className="font-semibold">จำนวน order_number ที่แพ็คต่อวัน</h2>
+              <p className="text-xs text-slate-500">กราฟเส้นแยกตามกลุ่มการจัดสินค้า · ชี้ที่เส้นหรือจุดเพื่อดูชื่อข้อมูล</p>
             </div>
           </div>
-          <LinePackedItemsChart dates={trendDates} series={trendSeries} />
+          <LineTrendChart dates={trendDates} series={orderTrendSeries} unit="ออเดอร์" />
         </section>
 
         <section className="card p-4">
           <div className="mb-4">
             <h2 className="font-semibold">สัดส่วนสถานะวันที่จัดสินค้าเสร็จ</h2>
-            <p className="text-xs text-slate-500">นับจากจำนวนเลข order_number</p>
+            <p className="text-xs text-slate-500">นับจากจำนวนเลข order_number · ชี้ที่ชิ้นกราฟเพื่อดูชื่อสถานะ</p>
           </div>
           <PieStatusChart rows={statusData} total={pieTotal} />
         </section>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
+      <section className="card p-4">
+        <div className="mb-4">
+          <h2 className="font-semibold">จำนวนตัวที่แพ็คต่อวัน</h2>
+          <p className="text-xs text-slate-500">กราฟเส้นแยกตามกลุ่มการจัดสินค้า · ชี้ที่เส้นหรือจุดเพื่อดูชื่อข้อมูล</p>
+        </div>
+        <LineTrendChart dates={trendDates} series={itemTrendSeries} unit="ชิ้น" />
+      </section>
+
+      <div className="grid gap-6">
         <section className="card p-4">
           <h2 className="mb-3 font-semibold">สรุปตามกลุ่มการจัดสินค้า</h2>
           <div className="space-y-3">
@@ -205,50 +210,12 @@ export default async function PackingPerformancePage({ searchParams }: { searchP
             }) : <div className="py-8 text-center text-sm text-slate-400">ยังไม่มีข้อมูลตามตัวกรองนี้</div>}
           </div>
         </section>
-
-        <section className="card overflow-hidden">
-          <div className="border-b border-slate-100 p-4">
-            <h2 className="font-semibold">รายละเอียดรายวัน</h2>
-            <p className="text-xs text-slate-500">หนึ่งแถว = วันที่จัดสินค้าเสร็จ x กลุ่มการจัดสินค้า</p>
-          </div>
-          <div className="max-h-[520px] overflow-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 border-b border-slate-100 bg-slate-50">
-                <tr>
-                  <th className="th">วันที่เสร็จ</th>
-                  <th className="th">กลุ่ม</th>
-                  <th className="th text-right">ออเดอร์</th>
-                  <th className="th text-right">รายการ</th>
-                  <th className="th text-right">ชิ้น</th>
-                  <th className="th text-right">จัดผิด</th>
-                  <th className="th text-right">เฉลี่ยวันปิดงาน</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {data.map((r) => (
-                  <tr key={`${r.finished_date}-${r.packing_group}`} className="hover:bg-slate-50">
-                    <td className="td whitespace-nowrap font-medium">{thDate(r.finished_date)}</td>
-                    <td className="td">{r.packing_group}</td>
-                    <td className="td text-right">{num(r.orders_count)}</td>
-                    <td className="td text-right">{num(r.lines_count)}</td>
-                    <td className="td text-right font-medium text-emerald-700">{num(r.items_qty)}</td>
-                    <td className={"td text-right " + (r.wrong_qty ? "text-red-600" : "text-slate-400")}>{num(r.wrong_qty)}</td>
-                    <td className="td text-right">{r.avg_close_days == null ? "-" : r.avg_close_days.toFixed(1)}</td>
-                  </tr>
-                ))}
-                {!data.length && (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">ยังไม่มีข้อมูล — ให้ admin กด Sync ข้อมูลหลังแชร์ Google Sheet เป็น Viewer ด้วยลิงก์</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
       </div>
     </div>
   );
 }
 
-function LinePackedItemsChart({ dates, series }: { dates: string[]; series: { label: string; color: string; points: number[] }[] }) {
+function LineTrendChart({ dates, series, unit }: { dates: string[]; series: { label: string; color: string; points: number[] }[]; unit: string }) {
   const width = 920;
   const height = 300;
   const pad = { top: 24, right: 24, bottom: 48, left: 44 };
@@ -282,10 +249,14 @@ function LinePackedItemsChart({ dates, series }: { dates: string[]; series: { la
           const d = s.points.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p)}`).join(" ");
           return (
             <g key={s.label}>
-              <path d={d} fill="none" stroke={s.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={d} fill="none" stroke={s.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <title>{`${s.label} · ${unit}`}</title>
+              </path>
               {s.points.map((p, i) => (
                 <g key={`${s.label}-${dates[i]}`}>
-                  <circle cx={x(i)} cy={y(p)} r="4" fill={s.color} stroke="white" strokeWidth="2" />
+                  <circle cx={x(i)} cy={y(p)} r="4" fill={s.color} stroke="white" strokeWidth="2">
+                    <title>{`${s.label} · ${thDate(dates[i])} · ${num(p)} ${unit}`}</title>
+                  </circle>
                   {p > 0 && <text x={x(i)} y={y(p) - 9} textAnchor="middle" className="fill-slate-700 text-[10px] font-semibold">{num(p)}</text>}
                 </g>
               ))}
@@ -315,30 +286,20 @@ function PieStatusChart({ rows, total }: { rows: Array<Pick<StatusRow, "completi
   });
 
   return (
-    <div className="grid gap-4 sm:grid-cols-[240px_1fr]">
-      <svg viewBox="0 0 220 220" className="mx-auto h-[220px] w-[220px]">
-        {slices.map((s) => <path key={s.row.completion_status} d={piePath(cx, cy, r, s.start, s.end)} fill={s.color} stroke="var(--surface)" strokeWidth="3" />)}
+    <div className="flex justify-center">
+      <svg viewBox="0 0 220 220" className="mx-auto h-[260px] w-[260px] max-w-full">
+        {slices.map((s) => {
+          const pct = total ? (s.value / total) * 100 : 0;
+          return (
+            <path key={s.row.completion_status} d={piePath(cx, cy, r, s.start, s.end)} fill={s.color} stroke="var(--surface)" strokeWidth="3">
+              <title>{`${s.row.completion_status} · ${num(s.value)} ออเดอร์ · ${pct.toFixed(1)}% · ${num(s.row.lines_count)} รายการ · ${num(s.row.items_qty)} ชิ้น`}</title>
+            </path>
+          );
+        })}
         <circle cx={cx} cy={cy} r="48" fill="var(--surface)" />
         <text x={cx} y={cy - 4} textAnchor="middle" className="fill-slate-500 text-[12px]">ออเดอร์</text>
         <text x={cx} y={cy + 22} textAnchor="middle" className="fill-slate-800 text-[24px] font-bold">{num(total)}</text>
       </svg>
-      <div className="space-y-2">
-        {slices.map((s) => {
-          const pct = total ? (s.value / total) * 100 : 0;
-          return (
-            <div key={s.row.completion_status} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
-                  <span className="truncate text-sm font-medium">{s.row.completion_status}</span>
-                </div>
-                <div className="text-right text-sm font-semibold">{num(s.value)}</div>
-              </div>
-              <div className="mt-1 text-xs text-slate-500">{pct.toFixed(1)}% · {num(s.row.lines_count)} รายการ · {num(s.row.items_qty)} ชิ้น</div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
