@@ -459,7 +459,9 @@ export async function syncProductMaster(): Promise<SyncResult> {
       });
     }
     for (const part of chunk([...missing.values()], 500)) {
-      const { error: insertErr } = await db.from("products").insert(part);
+      const { error: insertErr } = await db
+        .from("products")
+        .upsert(part, { onConflict: "sku" });
       if (insertErr) throw insertErr;
     }
     const { count } = await db.from("products").select("id", { count: "exact", head: true });
