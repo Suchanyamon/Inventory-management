@@ -221,9 +221,9 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
                 <th className="th">รหัสสินค้า</th>
                 <th className="th">ชื่อสินค้า</th>
                 <th className="th">ตำแหน่ง</th>
-                <th className="th text-right">คงเหลือ DCMT<br /><span className="text-[11px] font-normal text-slate-400">กล่องเต็ม / เศษ</span></th>
+                <th className="th text-right">คงเหลือ DCMT<br /><span className="text-[11px] font-normal text-slate-400">จำนวนตัวเศษ</span></th>
                 <th className="th text-right">มูลค่าคงคลังสินค้า DCMT</th>
-                <th className="th text-right">คงเหลือ DCMTA<br /><span className="text-[11px] font-normal text-slate-400">กล่องเต็ม / เศษ</span></th>
+                <th className="th text-right">คงเหลือ DCMTA<br /><span className="text-[11px] font-normal text-slate-400">จำนวนตัว / กล่อง</span></th>
                 <th className="th text-right">มูลค่าสินค้า DCMTA</th>
               </tr>
             </thead>
@@ -234,11 +234,11 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
                   <td className="td max-w-[220px] truncate">{d.name}</td>
                   <td className="td text-xs text-slate-500">{d.storage_location || "-"}</td>
                   <td className="td text-right">
-                    <QtyPack qty={Number(d.dcmt_qty || 0)} boxes={d.dcmt_full_boxes} loose={d.dcmt_loose_units} />
+                    <DcmtLoose qty={Number(d.dcmt_qty || 0)} loose={d.dcmt_loose_units} />
                   </td>
                   <td className="td text-right font-medium text-brand">{baht(Number(d.dcmt_value || 0))}</td>
                   <td className="td text-right">
-                    <QtyPack qty={Number(d.dcmta_qty || 0)} boxes={d.dcmta_full_boxes} loose={d.dcmta_loose_units} />
+                    <DcmtaQtyPack qty={Number(d.dcmta_qty || 0)} boxes={d.dcmta_full_boxes} loose={d.dcmta_loose_units} />
                   </td>
                   <td className="td text-right font-medium text-brand">{baht(Number(d.dcmta_value || 0))}</td>
                 </tr>
@@ -281,18 +281,29 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
   );
 }
 
-function QtyPack({ qty, boxes, loose }: { qty: number; boxes: number | string | null; loose: number | string | null }) {
+function DcmtLoose({ qty, loose }: { qty: number; loose: number | string | null }) {
+  const looseCount = loose === null || loose === undefined ? qty : Number(loose);
+
+  return (
+    <div>
+      <div className="font-medium">{num(looseCount)} ตัวเศษ</div>
+      <div className="text-[11px] text-slate-400">รวม {num(qty)} ชิ้น</div>
+    </div>
+  );
+}
+
+function DcmtaQtyPack({ qty, boxes, loose }: { qty: number; boxes: number | string | null; loose: number | string | null }) {
   const boxCount = boxes === null || boxes === undefined ? null : Number(boxes);
   const looseCount = loose === null || loose === undefined ? null : Number(loose);
 
   if (boxCount === null) {
-    return <span>{num(qty)} ชิ้น</span>;
+    return <span>{num(qty)} ตัว</span>;
   }
 
   return (
     <div>
-      <div className="font-medium">{num(boxCount)} กล่อง · {num(looseCount || 0)} เศษ</div>
-      <div className="text-[11px] text-slate-400">รวม {num(qty)} ชิ้น</div>
+      <div className="font-medium">{num(qty)} ตัว</div>
+      <div className="text-[11px] text-slate-400">{num(boxCount)} กล่อง · {num(looseCount || 0)} เศษ</div>
     </div>
   );
 }
