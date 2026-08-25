@@ -433,6 +433,35 @@ export async function syncProductMaster(): Promise<SyncResult> {
     const db = admin();
     const { error } = await db.rpc("sp_sync_product_master_from_sync_tables");
     if (error) throw error;
+    const { data: snapshotRows, error: snapshotErr } = await db
+      .from("product_inventory_snapshot")
+      .select("sku, grade, model")
+      .not("sku", "is", null);
+    if (snapshotErr) throw snapshotErr;
+    const { data: products, error: productsErr } = await db
+      .from("products")
+      .select("sku");
+    if (productsErr) throw productsErr;
+
+    const existing = new Set((products || []).map((row: { sku: string }) => norm(row.sku)));
+    const missing = new Map<string, { sku: string; name_th: string; grade: string | null; model: string | null; is_active: boolean; source_updated_at: string }>();
+    const now = new Date().toISOString();
+    for (const row of snapshotRows || []) {
+      const sku = norm((row as { sku: string }).sku);
+      if (!sku || existing.has(sku) || missing.has(sku)) continue;
+      missing.set(sku, {
+        sku,
+        name_th: sku,
+        grade: norm((row as { grade?: string | null }).grade || "") || null,
+        model: norm((row as { model?: string | null }).model || "") || null,
+        is_active: true,
+        source_updated_at: now,
+      });
+    }
+    for (const part of chunk([...missing.values()], 500)) {
+      const { error: insertErr } = await db.from("products").insert(part);
+      if (insertErr) throw insertErr;
+    }
     const { count } = await db.from("products").select("id", { count: "exact", head: true });
     return { source: "สินค้า master", ok: true, count: count ?? 0 };
   } catch (e: any) {
@@ -450,11 +479,15 @@ type DataSkuRow = {
   formula: string | null;
   unitsPerCarton: number | null;
   costCurrent: number | null;
+  productType: string | null;
+  businessGroup: string | null;
 };
 type ProductSkuPackUpdate = {
   sku: string;
   name_th?: string | null;
   size?: string | null;
+  product_type?: string | null;
+  business_group?: string | null;
   sku_formula: string | null;
   units_per_carton: number | null;
   cost_current: number | null;
@@ -490,6 +523,8 @@ export async function syncDataSkuPack(): Promise<SyncResult> {
         formula: norm(row[24] || "") || null,
         unitsPerCarton: toNum(row[25] || ""),
         costCurrent: toNum(row[20] || ""),
+        productType: norm(row[9] || "") || null,
+        businessGroup: norm(row[11] || "") || null,
       });
     }
 
@@ -508,6 +543,8 @@ export async function syncDataSkuPack(): Promise<SyncResult> {
           sku,
           name_th: exactRow.name || sku,
           size: exactRow.size,
+          product_type: exactRow.productType,
+          business_group: exactRow.businessGroup,
           sku_formula: exactRow.formula,
           units_per_carton: exactRow.unitsPerCarton,
           cost_current: exactRow.costCurrent,
@@ -525,6 +562,8 @@ export async function syncDataSkuPack(): Promise<SyncResult> {
       return {
         sku,
         name_th: children.find((row) => row.name)?.name || sku,
+        product_type: children.find((row) => row.productType)?.productType || null,
+        business_group: children.find((row) => row.businessGroup)?.businessGroup || null,
         sku_formula: formulaBase,
         units_per_carton: modeNumber(packs),
         cost_current: avgNumber(costs),
