@@ -410,7 +410,7 @@ export async function syncExcel(): Promise<SyncResult[]> {
   // inv_turnover
   try {
     const SHEETS: [string, string][] = [["Inv.Trun Over", "Over"], ["Inv.Trun Over Runitem", "Runitem"], ["Inv.Trun Over F", "F"]];
-    const out: any[] = [];
+    const outByKey = new Map<string, any>();
     for (const [name, key] of SHEETS) {
       const rows = sheet(name);
       for (let i = 1; i < rows.length; i++) {
@@ -418,9 +418,19 @@ export async function syncExcel(): Promise<SyncResult[]> {
         const biz = typeof v[1] === "string" ? v[1].trim() : v[1];
         const mo = typeof v[2] === "string" ? v[2].trim() : v[2];
         if (!biz || !MONTHS.includes(mo)) continue;
-        out.push({ sheet: key, business: biz, month: mo, month_idx: MONTHS.indexOf(mo), inv_ratio: typeof v[9] === "number" ? v[9] : null, dsi: typeof v[10] === "number" ? v[10] : null });
+        const row = { sheet: key, business: biz, month: mo, month_idx: MONTHS.indexOf(mo), inv_ratio: typeof v[9] === "number" ? v[9] : null, dsi: typeof v[10] === "number" ? v[10] : null };
+        const rowKey = `${row.sheet}::${row.business}::${row.month_idx}`;
+        const prev = outByKey.get(rowKey);
+        const rowRatio = Number(row.inv_ratio || 0);
+        const prevRatio = Number(prev?.inv_ratio || 0);
+        const rowDsi = Number(row.dsi || 0);
+        const prevDsi = Number(prev?.dsi || 0);
+        if (!prev || rowRatio > prevRatio || (rowRatio === prevRatio && rowDsi > prevDsi)) {
+          outByKey.set(rowKey, row);
+        }
       }
     }
+    const out = [...outByKey.values()].sort((a, b) => a.sheet.localeCompare(b.sheet) || a.business.localeCompare(b.business) || a.month_idx - b.month_idx);
     await replaceTable("inv_turnover", out);
     results.push({ source: "Inv.Ratio / DSI", ok: true, count: out.length });
   } catch (e: any) { results.push({ source: "Inv.Ratio / DSI", ok: false, error: e.message }); }

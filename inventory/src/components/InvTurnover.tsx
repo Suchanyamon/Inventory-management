@@ -30,8 +30,18 @@ export default function InvTurnover({ rows }: { rows: InvRow[] }) {
   const [biz, setBiz] = useState(() => BIZ_ORDER.find((b) => rows.some((r) => r.business === b)) || "Uniform");
 
   const pts = useMemo(() => {
-    return rows
-      .filter((r) => r.sheet === sheet && r.business === biz)
+    const byMonth = new Map<number, InvRow>();
+    for (const row of rows.filter((r) => r.sheet === sheet && r.business === biz)) {
+      const prev = byMonth.get(row.month_idx);
+      const rowRatio = Number(row.inv_ratio || 0);
+      const prevRatio = Number(prev?.inv_ratio || 0);
+      const rowDsi = Number(row.dsi || 0);
+      const prevDsi = Number(prev?.dsi || 0);
+      if (!prev || rowRatio > prevRatio || (rowRatio === prevRatio && rowDsi > prevDsi)) {
+        byMonth.set(row.month_idx, row);
+      }
+    }
+    return [...byMonth.values()]
       .sort((a, b) => a.month_idx - b.month_idx)
       .filter((r) => (r.inv_ratio || 0) !== 0 || (r.dsi || 0) !== 0);
   }, [rows, sheet, biz]);
