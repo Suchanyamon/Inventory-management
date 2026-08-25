@@ -15,6 +15,7 @@ const SHEETS: [string, string][] = [
   ["Runitem", "Over Runitem"],
   ["F", "Over F"],
 ];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const BIZ_ORDER = ["Uniform", "Merchandise", "Fashion", "YTD"];
 const RATIO = "#780808";
 const DSI = "#f97316";
@@ -41,9 +42,14 @@ export default function InvTurnover({ rows }: { rows: InvRow[] }) {
         byMonth.set(row.month_idx, row);
       }
     }
-    return [...byMonth.values()]
-      .sort((a, b) => a.month_idx - b.month_idx)
-      .filter((r) => (r.inv_ratio || 0) !== 0 || (r.dsi || 0) !== 0);
+    return MONTHS.map((month, month_idx) => byMonth.get(month_idx) || {
+      sheet,
+      business: biz,
+      month,
+      month_idx,
+      inv_ratio: 0,
+      dsi: 0,
+    });
   }, [rows, sheet, biz]);
 
   const months = pts.map((r) => r.month);
