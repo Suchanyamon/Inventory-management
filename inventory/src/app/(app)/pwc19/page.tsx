@@ -13,13 +13,30 @@ const STATUS = {
   ok: { label: "ปกติ", cls: "text-emerald-600" },
 } as const;
 
-export default async function DashboardPWC19({ searchParams }: { searchParams: { zone?: string } }) {
+export default async function DashboardPWC19({ searchParams }: { searchParams: { zone?: string; sku?: string; productType?: string; fabric?: string } }) {
   const supabase = createSupabaseServer();
   const zone = (searchParams.zone || "").trim();
+  const skuSearch = (searchParams.sku || "").trim();
+  const productType = (searchParams.productType || "").trim();
+  const fabric = (searchParams.fabric || "").trim();
+
+  let inventoryQuery = supabase
+    .from("v_pwc19_inventory_valuation_by_sku")
+    .select("sku,name,storage_location,product_type,fabric,dcmt_qty,dcmt_full_boxes,dcmt_loose_units,dcmt_value,dcmta_qty,dcmta_full_boxes,dcmta_loose_units,dcmta_value,units_per_carton", { count: "exact" })
+    .order("storage_location", { ascending: true, nullsFirst: false })
+    .order("sku", { ascending: true })
+    .limit(200);
+
+  if (skuSearch) {
+    inventoryQuery = inventoryQuery.or(`sku.ilike.%${skuSearch}%,name.ilike.%${skuSearch}%`);
+  }
+  if (productType) inventoryQuery = inventoryQuery.eq("product_type", productType);
+  if (fabric) inventoryQuery = inventoryQuery.eq("fabric", fabric);
 
   const [
     { data: valByWh }, { count: reorderCount }, { data: nearExp }, { data: statusSum }, { data: byCat },
-    { data: abc }, { data: zones }, { data: dead, count: deadCount }, { data: storageLocations },
+    { data: abc }, { data: zones }, { data: inventoryRows, count: inventoryCount }, { data: storageLocations },
+    { data: productTypeRows }, { data: fabricRows },
   ] = await Promise.all([
     supabase.from("v_valuation_by_warehouse_snapshot").select("*"),
     supabase.from("v_reorder_list").select("*", { count: "exact", head: true }),
@@ -28,13 +45,10 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
     supabase.from("v_valuation_by_category_snapshot").select("*").limit(10),
     supabase.from("v_abc_summary").select("*"),
     supabase.from("v_zone_usage").select("*"),
-    supabase
-      .from("v_dead_stock_snapshot")
-      .select("sku,name,model,storage_location,on_hand,tied_value", { count: "exact" })
-      .order("storage_location", { ascending: true, nullsFirst: false })
-      .order("sku", { ascending: true })
-      .limit(20),
+    inventoryQuery,
     supabase.from("storage_location").select("code,locations").order("code"),
+    supabase.from("v_pwc19_inventory_valuation_by_sku").select("product_type").order("product_type"),
+    supabase.from("v_pwc19_inventory_valuation_by_sku").select("fabric").order("fabric"),
   ]);
 
   const totalValue = (valByWh || []).reduce((s, w) => s + Number(w.total_value_fifo || 0), 0);
@@ -44,7 +58,11 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
   const catMax = Math.max(1, ...(byCat || []).map((c) => Number(c.total_value_fifo || 0)));
   const sortedZones = [...(zones || [])].sort((a, b) => String(a.zone || "").localeCompare(String(b.zone || ""), "en", { numeric: true }));
   const zoneMax = Math.max(1, ...sortedZones.map((z) => Number(z.slots || 0)));
-  const deadTotal = (dead || []).reduce((s, d) => s + Number(d.tied_value || 0), 0);
+  const inventoryDcmtTotal = (inventoryRows || []).reduce((s, d) => s + Number(d.dcmt_value || 0), 0);
+  const inventoryDcmtaTotal = (inventoryRows || []).reduce((s, d) => s + Number(d.dcmta_value || 0), 0);
+  const productTypes = [...new Set((productTypeRows || []).map((r) => String(r.product_type || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th"));
+  const fabrics = [...new Set((fabricRows || []).map((r) => String(r.fabric || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th"));
+  const hasInventoryFilters = Boolean(skuSearch || productType || fabric);
   const selectedZoneRows = (storageLocations || [])
     .flatMap((row) =>
       row.locations.split(",").map((location: string) => location.trim()).filter(Boolean).flatMap((location: string) => {
@@ -166,27 +184,70 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
         )}
       </div>
 
-      {/* 🔴 สต็อกค้างนาน */}
-      <div className="card">
+      {/* 🧮 มูลค่าคงคลังสินค้า DCMT / DCMTA */}
+      <div id="inventory-valuation" className="card">
         <div className="border-b border-slate-100 p-4">
-          <h2 className="font-semibold">🔴 สต็อกค้าง — ยังไม่มีการเบิกออก</h2>
-          <p className="mt-0.5 text-xs text-slate-400">{num(deadCount || 0)} SKU · เงินจมรวม {baht(deadTotal)}+ (20 รายการแรก เรียงตามตำแหน่งเก็บ PWC19) · อิงจาก ledger จะแม่นขึ้นเมื่อมีการเบิก/โอนสะสม</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">🧮 มูลค่าคงคลังสินค้าของคลัง DCMT / DCMTA</h2>
+              <p className="mt-0.5 text-xs text-slate-400">
+                {num(inventoryCount || 0)} SKU · แสดง 200 รายการแรกเรียงตามตำแหน่งเก็บ PWC19 · มูลค่าหน้านี้ DCMT {baht(inventoryDcmtTotal)} / DCMTA {baht(inventoryDcmtaTotal)}
+              </p>
+            </div>
+            {hasInventoryFilters && <Link href="/pwc19#inventory-valuation" className="btn-ghost text-xs">ล้างตัวกรอง</Link>}
+          </div>
+          <form className="mt-4 grid gap-2 md:grid-cols-[1.2fr_1fr_1fr_auto]" action="/pwc19#inventory-valuation">
+            <input
+              name="sku"
+              defaultValue={skuSearch}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand"
+              placeholder="ค้นหา SKU / ชื่อสินค้า"
+            />
+            <select name="productType" defaultValue={productType} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand">
+              <option value="">ทุกประเภทสินค้า</option>
+              {productTypes.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+            <select name="fabric" defaultValue={fabric} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand">
+              <option value="">ทุกเนื้อผ้า</option>
+              {fabrics.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+            <button className="btn-primary whitespace-nowrap" type="submit">ค้นหา</button>
+          </form>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="border-b border-slate-100 bg-slate-50">
-              <tr><th className="th">SKU</th><th className="th">สินค้า</th><th className="th">ตำแหน่ง</th><th className="th text-right">คงเหลือ</th><th className="th text-right">มูลค่าที่จม</th></tr>
+              <tr>
+                <th className="th">รหัสสินค้า</th>
+                <th className="th">ชื่อสินค้า</th>
+                <th className="th">ตำแหน่ง</th>
+                <th className="th text-right">คงเหลือ DCMT<br /><span className="text-[11px] font-normal text-slate-400">กล่องเต็ม / เศษ</span></th>
+                <th className="th text-right">มูลค่าคงคลังสินค้า DCMT</th>
+                <th className="th text-right">คงเหลือ DCMTA<br /><span className="text-[11px] font-normal text-slate-400">กล่องเต็ม / เศษ</span></th>
+                <th className="th text-right">มูลค่าสินค้า DCMTA</th>
+              </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {(dead || []).map((d) => (
+              {(inventoryRows || []).map((d) => (
                 <tr key={d.sku} className="hover:bg-slate-50">
                   <td className="td font-mono text-xs"><Link href={`/products/${encodeURIComponent(d.sku)}`} className="text-brand hover:underline">{d.sku}</Link></td>
                   <td className="td max-w-[220px] truncate">{d.name}</td>
                   <td className="td text-xs text-slate-500">{d.storage_location || "-"}</td>
-                  <td className="td text-right">{num(Number(d.on_hand))}</td>
-                  <td className="td text-right font-medium text-red-600">{baht(Number(d.tied_value))}</td>
+                  <td className="td text-right">
+                    <QtyPack qty={Number(d.dcmt_qty || 0)} boxes={d.dcmt_full_boxes} loose={d.dcmt_loose_units} />
+                  </td>
+                  <td className="td text-right font-medium text-brand">{baht(Number(d.dcmt_value || 0))}</td>
+                  <td className="td text-right">
+                    <QtyPack qty={Number(d.dcmta_qty || 0)} boxes={d.dcmta_full_boxes} loose={d.dcmta_loose_units} />
+                  </td>
+                  <td className="td text-right font-medium text-brand">{baht(Number(d.dcmta_value || 0))}</td>
                 </tr>
               ))}
+              {(!inventoryRows || inventoryRows.length === 0) && (
+                <tr>
+                  <td className="td py-8 text-center text-slate-400" colSpan={7}>ไม่พบสินค้าตามตัวกรองนี้</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -216,6 +277,22 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function QtyPack({ qty, boxes, loose }: { qty: number; boxes: number | string | null; loose: number | string | null }) {
+  const boxCount = boxes === null || boxes === undefined ? null : Number(boxes);
+  const looseCount = loose === null || loose === undefined ? null : Number(loose);
+
+  if (boxCount === null) {
+    return <span>{num(qty)} ชิ้น</span>;
+  }
+
+  return (
+    <div>
+      <div className="font-medium">{num(boxCount)} กล่อง · {num(looseCount || 0)} เศษ</div>
+      <div className="text-[11px] text-slate-400">รวม {num(qty)} ชิ้น</div>
     </div>
   );
 }
