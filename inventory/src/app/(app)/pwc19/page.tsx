@@ -223,7 +223,7 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
                 <th className="th">ตำแหน่ง</th>
                 <th className="th text-right">คงเหลือ DCMT<br /><span className="text-[11px] font-normal text-slate-400">จำนวนตัวเศษ</span></th>
                 <th className="th text-right">มูลค่าคงคลังสินค้า DCMT</th>
-                <th className="th text-right">คงเหลือ DCMTA<br /><span className="text-[11px] font-normal text-slate-400">จำนวนตัว / กล่อง</span></th>
+                <th className="th text-right">คงเหลือ DCMTA<br /><span className="text-[11px] font-normal text-slate-400">จำนวนตัว / มาตรฐานบรรจุกล่อง</span></th>
                 <th className="th text-right">มูลค่าสินค้า DCMTA</th>
               </tr>
             </thead>
@@ -238,7 +238,7 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
                   </td>
                   <td className="td text-right font-medium text-brand">{baht(Number(d.dcmt_value || 0))}</td>
                   <td className="td text-right">
-                    <DcmtaQtyPack qty={Number(d.dcmta_qty || 0)} boxes={d.dcmta_full_boxes} loose={d.dcmta_loose_units} />
+                    <DcmtaQtyPack qty={Number(d.dcmta_qty || 0)} unitsPerCarton={d.units_per_carton} />
                   </td>
                   <td className="td text-right font-medium text-brand">{baht(Number(d.dcmta_value || 0))}</td>
                 </tr>
@@ -292,18 +292,17 @@ function DcmtLoose({ qty, loose }: { qty: number; loose: number | string | null 
   );
 }
 
-function DcmtaQtyPack({ qty, boxes, loose }: { qty: number; boxes: number | string | null; loose: number | string | null }) {
-  const boxCount = boxes === null || boxes === undefined ? null : Number(boxes);
-  const looseCount = loose === null || loose === undefined ? null : Number(loose);
+function DcmtaQtyPack({ qty, unitsPerCarton }: { qty: number; unitsPerCarton: number | string | null }) {
+  const cartonStandard = unitsPerCarton === null || unitsPerCarton === undefined ? null : Number(unitsPerCarton);
 
-  if (boxCount === null) {
+  if (!cartonStandard) {
     return <span>{num(qty)} ตัว</span>;
   }
 
   return (
     <div>
       <div className="font-medium">{num(qty)} ตัว</div>
-      <div className="text-[11px] text-slate-400">{num(boxCount)} กล่อง · {num(looseCount || 0)} เศษ</div>
+      <div className="text-[11px] text-slate-400">บรรจุ {num(cartonStandard)} ตัว/กล่อง</div>
     </div>
   );
 }
