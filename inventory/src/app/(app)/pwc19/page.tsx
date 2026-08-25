@@ -43,7 +43,12 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
     supabase.from("v_valuation_by_category_snapshot").select("*").limit(10),
     supabase.from("v_abc_summary").select("*"),
     supabase.from("v_zone_usage").select("*"),
-    supabase.from("v_dead_stock_snapshot").select("sku,name,model,storage_location,on_hand,tied_value", { count: "exact" }).order("tied_value", { ascending: false }).limit(20),
+    supabase
+      .from("v_dead_stock_snapshot")
+      .select("sku,name,model,storage_location,on_hand,tied_value", { count: "exact" })
+      .order("storage_location", { ascending: true, nullsFirst: false })
+      .order("sku", { ascending: true })
+      .limit(20),
     supabase.from("storage_location").select("code,locations").order("code"),
   ]);
 
@@ -182,7 +187,7 @@ export default async function DashboardPWC19({ searchParams }: { searchParams: {
       <div className="card">
         <div className="border-b border-slate-100 p-4">
           <h2 className="font-semibold">🔴 สต็อกค้าง — ยังไม่มีการเบิกออก</h2>
-          <p className="mt-0.5 text-xs text-slate-400">{num(deadCount || 0)} SKU · เงินจมรวม {baht(deadTotal)}+ (Top 20 ตามมูลค่า) · อิงจาก ledger จะแม่นขึ้นเมื่อมีการเบิก/โอนสะสม</p>
+          <p className="mt-0.5 text-xs text-slate-400">{num(deadCount || 0)} SKU · เงินจมรวม {baht(deadTotal)}+ (20 รายการแรก เรียงตามตำแหน่งเก็บ PWC19) · อิงจาก ledger จะแม่นขึ้นเมื่อมีการเบิก/โอนสะสม</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
